@@ -122,7 +122,7 @@ class Adafruit_GPS {
   boolean parse(char *);
   void interruptReads(boolean r);
 
-  boolean wakeup(void);
+  boolean wakeupGPS(void);
   boolean standby(void);
 
   uint8_t hour, minute, seconds, year, month, day;

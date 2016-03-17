@@ -486,7 +486,7 @@ boolean Adafruit_GPS::standby(void) {
   }
 }
 
-boolean Adafruit_GPS::wakeup(void) {
+boolean Adafruit_GPS::wakeupGPS(void) {
   if (inStandbyMode) {
    inStandbyMode = false;
     sendCommand("");  // send byte to wake it up
