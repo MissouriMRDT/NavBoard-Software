@@ -105,19 +105,19 @@ void loop()                     // run over and over again
       gps_lat_lon = GPS.latitude_fixed;
       gps_lat_lon = gps_lat_lon << 32;
       gps_lat_lon += GPS.longitude_fixed;
-      roveComm_SendMsg(GPS_LAT_LON_DATA_ID, sizeof(gps_lat_lon), gps_lat_lon);
+      roveComm_SendMsg(GPS_LAT_LON_DATA_ID, sizeof(gps_lat_lon), &gps_lat_lon);
       
       Serial.print("Speed (knots): "); Serial.println(GPS.speed);
-      roveComm_SendMsg(GPS_SPEED_DATA_ID, sizeof(GPS.speed), GPS.speed);
+      roveComm_SendMsg(GPS_SPEED_DATA_ID, sizeof(GPS.speed), &GPS.speed);
       
       Serial.print("Angle: "); Serial.println(GPS.angle);
-      roveComm_SendMsg(GPS_ANGLE_DATA_ID, sizeof(GPS.angle), GPS.angle);
+      roveComm_SendMsg(GPS_ANGLE_DATA_ID, sizeof(GPS.angle), &GPS.angle);
       
       Serial.print("Altitude: "); Serial.println(GPS.altitude);
-      roveComm_SendMsg(GPS_ALTITUDE_DATA_ID, sizeof(GPS.altitude), GPS.altitude);
+      roveComm_SendMsg(GPS_ALTITUDE_DATA_ID, sizeof(GPS.altitude), &GPS.altitude);
       
       Serial.print("Satellites: "); Serial.println(GPS.satellites);      
-      roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), GPS.satellites);
+      roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), &GPS.satellites);
     }//end if
   }//end if
 }//end loop
