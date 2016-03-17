@@ -60,6 +60,16 @@ Adafruit_GPS GPS(&mySerial);
 boolean usingInterrupt = false;
 void useInterrupt(boolean); // Func prototype keeps Arduino 0023 happy
 
+const uint16_t GPS_FIX_QUALITY_DATA_ID = 301;
+const uint16_t GPS_LAT_LON_DATA_ID = 302;
+const uint16_t GPS_SPEED_DATA_ID = 303;
+const uint16_t GPS_ANGLE_DATA_ID = 304;
+const uint16_t GPS_ALTITUDE_DATA_ID = 305;
+const uint16_t GPS_SATELLITES_DATA_ID = 306;
+
+//variable init
+long gps_lat_lon = 0;
+
 void setup()  
 {
     
@@ -67,7 +77,11 @@ void setup()
   // also spit it out
   Serial.begin(115200);
   Serial.println("Adafruit GPS library basic test!");
-
+  
+  //connect to roveComm
+  roveComm_Begin(192,168,1,133);
+  Serial.println("RoveComm beginning");
+  
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
   
@@ -153,32 +167,47 @@ void loop()                     // run over and over again
   // approximately every 2 seconds or so, print out the current stats
   if (millis() - timer > 2000) { 
     timer = millis(); // reset the timer
-    
-    Serial.print("\nTime: ");
-    Serial.print(GPS.hour, DEC); Serial.print(':');
-    Serial.print(GPS.minute, DEC); Serial.print(':');
-    Serial.print(GPS.seconds, DEC); Serial.print('.');
-    Serial.println(GPS.milliseconds);
-    Serial.print("Date: ");
-    Serial.print(GPS.day, DEC); Serial.print('/');
-    Serial.print(GPS.month, DEC); Serial.print("/20");
-    Serial.println(GPS.year, DEC);
+   
+    //debug
+    GPS.fixquality = 200;
+    GPS.latitude_fixed = 407098514;
+    GPS.longitude_fixed = -740079168;
+    GPS.speed = 123.456;
+    GPS.angle = 789.012;
+    GPS.altitude = 345.678;
+    GPS.satellites = 251;
+   
     Serial.print("Fix: "); Serial.print((int)GPS.fix);
-    Serial.print(" quality: "); Serial.println((int)GPS.fixquality); 
+    if(!GPS.fix)
+    {
+      GPS.fixquality = 0;
+    }
+    Serial.print(" quality: "); Serial.println(GPS.fixquality);
+    roveComm_SendMsg(GPS_FIX_QUALITY_DATA_ID, sizeof(GPS.fixquality), GPS.fixquality);
+    
     if (GPS.fix) {
       Serial.print("Location: ");
       Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
       Serial.print(", "); 
       Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
-      Serial.print("Location (in degrees, works with Google Maps): ");
-      Serial.print(GPS.latitudeDegrees, 4);
-      Serial.print(", "); 
-      Serial.println(GPS.longitudeDegrees, 4);
+      
+      //VARIFY ADAFRUIT_GPS PULL #13
+      gps_lat_lon = GPS.latitude_fixed;
+      gps_lat_lon = gps_lat_lon << 32;
+      gps_lat_lon += GPS.longitude_fixed;
+      roveComm_SendMsg(GPS_LAT_LON_DATA_ID, sizeof(gps_lat_lon), gps_lat_lon);
       
       Serial.print("Speed (knots): "); Serial.println(GPS.speed);
+      roveComm_SendMsg(GPS_SPEED_DATA_ID, sizeof(GPS.speed), GPS.speed);
+      
       Serial.print("Angle: "); Serial.println(GPS.angle);
+      roveComm_SendMsg(GPS_ANGLE_DATA_ID, sizeof(GPS.angle), GPS.angle);
+      
       Serial.print("Altitude: "); Serial.println(GPS.altitude);
-      Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
+      roveComm_SendMsg(GPS_ALTITUDE_DATA_ID, sizeof(GPS.altitude), GPS.altitude);
+      
+      Serial.print("Satellites: "); Serial.println(GPS.satellites);      
+      roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), GPS.satellites);
     }
   }
 }
