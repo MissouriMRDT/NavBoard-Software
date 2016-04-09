@@ -77,13 +77,13 @@ void loop()                     // run over and over again
     timer = millis(); // reset the timer
    
     //debug
-    GPS.fixquality = 200;
-    GPS.latitude_fixed = 407098514;
-    GPS.longitude_fixed = -740079168;
-    GPS.speed = 123.456;
-    GPS.angle = 789.012;
-    GPS.altitude = 345.678;
-    GPS.satellites = 251;
+    //GPS.fixquality = 200;
+    //GPS.latitude_fixed = 407098514;
+    //GPS.longitude_fixed = -740079168;
+    //GPS.speed = 123.456;
+    //GPS.angle = 789.012;
+    //GPS.altitude = 345.678;
+    //GPS.satellites = 251;
    
     //Serial.print("Fix: "); Serial.print((int)GPS.fix);
     if(!GPS.fix)
