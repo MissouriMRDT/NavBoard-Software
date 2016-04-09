@@ -17,19 +17,19 @@ const uint16_t GPS_SATELLITES_DATA_ID = 306;
 
 long gps_lat_lon = 0;
 
-HardwareSerial mySerial = Serial1;
+HardwareSerial mySerial = Serial7;
 Adafruit_GPS GPS(&mySerial);
 //SoftwareSerial mySerial(3, 2);
 
 void setup()  
 {   
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
-  Serial.begin(115200);
-  Serial.println("Adafruit GPS library basic test!");
+  //Serial.begin(115200);
+  //Serial.println("Adafruit GPS library basic test!");
   
   //connect to roveComm
   roveComm_Begin(192,168,1,133);
-  Serial.println("roveComm_Begin");
+  //Serial.println("roveComm_Begin");
   
   // 9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
@@ -85,21 +85,21 @@ void loop()                     // run over and over again
     GPS.altitude = 345.678;
     GPS.satellites = 251;
    
-    Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    //Serial.print("Fix: "); Serial.print((int)GPS.fix);
     if(!GPS.fix)
     {
       GPS.fixquality = 0;
     }//end if
     
-    Serial.print(" quality: "); Serial.println(GPS.fixquality);
+    //Serial.print(" quality: "); Serial.println(GPS.fixquality);
     roveComm_SendMsg(GPS_FIX_QUALITY_DATA_ID, sizeof(GPS.fixquality), &GPS.fixquality);
     
     if (GPS.fix) 
     {
-      Serial.print("Location: ");
-      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
-      Serial.print(", "); 
-      Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
+      //Serial.print("Location: ");
+      //Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+      //Serial.print(", "); 
+      //Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
       
       //VARIFY ADAFRUIT_GPS PULL #13
       gps_lat_lon = GPS.latitude_fixed;
@@ -107,16 +107,16 @@ void loop()                     // run over and over again
       gps_lat_lon += GPS.longitude_fixed;
       roveComm_SendMsg(GPS_LAT_LON_DATA_ID, sizeof(gps_lat_lon), &gps_lat_lon);
       
-      Serial.print("Speed (knots): "); Serial.println(GPS.speed);
+      //Serial.print("Speed (knots): "); Serial.println(GPS.speed);
       roveComm_SendMsg(GPS_SPEED_DATA_ID, sizeof(GPS.speed), &GPS.speed);
       
-      Serial.print("Angle: "); Serial.println(GPS.angle);
+      //Serial.print("Angle: "); Serial.println(GPS.angle);
       roveComm_SendMsg(GPS_ANGLE_DATA_ID, sizeof(GPS.angle), &GPS.angle);
       
-      Serial.print("Altitude: "); Serial.println(GPS.altitude);
+      //Serial.print("Altitude: "); Serial.println(GPS.altitude);
       roveComm_SendMsg(GPS_ALTITUDE_DATA_ID, sizeof(GPS.altitude), &GPS.altitude);
       
-      Serial.print("Satellites: "); Serial.println(GPS.satellites);      
+      //Serial.print("Satellites: "); Serial.println(GPS.satellites);      
       roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), &GPS.satellites);
     }//end if
   }//end if
