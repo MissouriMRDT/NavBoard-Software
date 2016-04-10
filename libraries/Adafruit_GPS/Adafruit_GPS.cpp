@@ -348,15 +348,14 @@ void Adafruit_GPS::common_init(void) {
     speed = angle = magvariation = HDOP = 0.0; // float
 }
 
-void Adafruit_GPS::begin(uint16_t baud)
+void Adafruit_GPS::begin(uint32_t baud)
 {
 #ifdef __AVR__
   if(gpsSwSerial) 
     gpsSwSerial->begin(baud);
-  else 
+  else
+#endif 
     gpsHwSerial->begin(baud);
-#endif
-
   delay(10);
 }
 
