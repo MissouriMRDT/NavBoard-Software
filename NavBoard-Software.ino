@@ -15,7 +15,7 @@ const uint16_t GPS_ANGLE_DATA_ID = 304;
 const uint16_t GPS_ALTITUDE_DATA_ID = 305;
 const uint16_t GPS_SATELLITES_DATA_ID = 306;
 
-long gps_lat_lon = 0;
+uint64_t gps_lat_lon = 0;
 
 Adafruit_GPS GPS(&Serial7);
 //SoftwareSerial mySerial(3, 2);
@@ -52,14 +52,14 @@ void loop()
   size_t data_size = 0;
   uint16_t data = 0;
   roveComm_GetMsg(&data_id, &data_size, &data);
-  delay(300);
+  //delay(300);
   
   //int16_t msg = 0;
   //roveComm_SendMsg(301, sizeof(msg), &msg);
   //delay(300);
   
   //Serial.print("Looping");
-  delay(1);
+  //delay(1);
   
   char c = GPS.read();
   
@@ -86,6 +86,7 @@ void loop()
     timer = millis(); // reset the timer
    
     //debug
+    /*
     GPS.fix = true;
     GPS.fixquality = 200;
     GPS.latitude_fixed = 407098514;
@@ -94,7 +95,7 @@ void loop()
     GPS.angle = 789.012;
     GPS.altitude = 345.678;
     GPS.satellites = 251;
-   
+   */
     if(!GPS.fix)
     {
       GPS.fixquality = 0;
