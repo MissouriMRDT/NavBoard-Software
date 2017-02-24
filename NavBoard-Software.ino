@@ -152,6 +152,11 @@ void setup()
   //Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
 
+  I2CSend(Address_AG, CTRL_REG4,0B00111000);  //enable gyro axis
+  I2CSend(Address_AG, CTRL_REG5_XL,0B00111000); //enable accelerometer
+  I2CSend(Address_AG, CTRL_REG1_G,0B01100000); //gyro/accel odr and bw
+  I2CSend(Address_M, CTRL_REG3_M,0B00000000); //enable mag continuous
+
 }//end 
 
 uint32_t timer = millis();
@@ -162,7 +167,7 @@ void loop()
   size_t data_size = 0;
   uint16_t data = 0;
   roveComm_GetMsg(&data_id, &data_size, &data);
-  //delay(300);
+  delay(300);
   
   //int16_t msg = 0;
   //roveComm_SendMsg(301, sizeof(msg), &msg);
