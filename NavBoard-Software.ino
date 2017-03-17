@@ -105,23 +105,18 @@ byte Write   = 0B00000000;
 byte Address_AG =   0B01101011;  //address of accelerometer/gyro with SDO_AG connected to Vdd
 byte Address_M   =   0B00011110;  //address of magnetometer with SDO_M connected to Vdd
 
-const uint16_t GPS_FIX_QUALITY_DATA_ID = 301;
-const uint16_t GPS_LAT_LON_DATA_ID = 302;
-const uint16_t GPS_SPEED_DATA_ID = 303;
-const uint16_t GPS_ANGLE_DATA_ID = 304;
-const uint16_t GPS_ALTITUDE_DATA_ID = 305;
-const uint16_t GPS_SATELLITES_DATA_ID = 306;
+const uint16_t GPS_FIX_QUALITY_DATA_ID = 1296;
+const uint16_t GPS_LAT_LON_DATA_ID = 1297;
+const uint16_t GPS_SPEED_DATA_ID = 1298;
+const uint16_t GPS_ANGLE_DATA_ID = 1299;
+const uint16_t GPS_ALTITUDE_DATA_ID = 1300;
+const uint16_t GPS_SATELLITES_DATA_ID = 1301;
 
 const uint16_t IMU_TEMP_DATA_ID = 1313;
-const uint16_t IMU_ACCEL_X_DATA_ID = 1314;
-const uint16_t IMU_ACCEL_Y_DATA_ID = 1315;
-const uint16_t IMU_ACCEL_Z_DATA_ID = 1316;
-const uint16_t IMU_GYRO_ROLL_DATA_ID = 1317;
-const uint16_t IMU_GYRO_PITCH_DATA_ID = 1318;
-const uint16_t IMU_GYRO_YAW_DATA_ID = 1319;
-const uint16_t IMU_MAG_X_DATA_ID = 1320;
-const uint16_t IMU_MAG_Y_DATA_ID = 1321;
-const uint16_t IMU_MAG_Z_DATA_ID = 1322;
+const uint16_t IMU_ACCEL_DATA_ID = 1314;
+const uint16_t IMU_GYRO_DATA_ID = 1315;
+const uint16_t IMU_MAG_DATA_ID = 1316;
+
 
 uint64_t gps_lat_lon = 0;
 
@@ -133,7 +128,7 @@ void setup()
   Wire.setModule(0);
   Wire.begin();
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
-  //Serial.begin(115200);
+  Serial.begin(115200);
   
   //connect to roveComm
   Ethernet.enableActivityLed();
@@ -257,9 +252,9 @@ void loop()
   float real_X_Axis =0.00875*(X_AXIs-320);
   float real_Y_Axis =0.00875*(Y_AXIs-17);
   float real_Z_Axis =0.00875*(Z_AXIs+190);
-  roveComm_SendMsg(IMU_GYRO_PITCH_DATA_ID, sizeof(real_X_Axis), &real_X_Axis);
-  roveComm_SendMsg(IMU_GYRO_ROLL_DATA_ID, sizeof(real_Y_Axis), &real_Y_Axis);
-  roveComm_SendMsg(IMU_GYRO_YAW_DATA_ID, sizeof(real_Z_Axis), &real_Z_Axis);
+  float GYRO_DATA[3] = {real_X_Axis, real_Y_Axis, real_Z_Axis};
+  roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
+
                                          
                                               
   //accelerometer/magnetometer section
@@ -296,17 +291,24 @@ void loop()
   float real_X_Axis_M = X_AXIS_M*0.00014;
   float real_Y_Axis_M = Y_AXIS_M*0.00014;
   float real_Z_Axis_M = Z_AXIS_M*0.00014;
-  roveComm_SendMsg(IMU_MAG_X_DATA_ID, sizeof(real_X_Axis_M), &real_X_Axis_M);
-  roveComm_SendMsg(IMU_MAG_Y_DATA_ID, sizeof(real_Y_Axis_M), &real_Y_Axis_M);
-  roveComm_SendMsg(IMU_MAG_Z_DATA_ID, sizeof(real_Z_Axis_M), &real_Z_Axis_M);
+  float MAG_DATA[3];
+  MAG_DATA[0]= real_X_Axis_M;
+  MAG_DATA[1] = real_Y_Axis_M;
+  MAG_DATA[2] = real_Z_Axis_M;
+  roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
+
 
   float real_X_AXIS_A = X_AXIS_A*0.000061;
   float real_Y_AXIS_A = Y_AXIS_A*0.000061;
   float real_Z_AXIS_A = Z_AXIS_A*0.000061;
 
-  roveComm_SendMsg(IMU_ACCEL_X_DATA_ID, sizeof(real_X_AXIS_A), &real_X_AXIS_A);
-  roveComm_SendMsg(IMU_ACCEL_Y_DATA_ID, sizeof(real_Y_AXIS_A), &real_Y_AXIS_A);
-  roveComm_SendMsg(IMU_ACCEL_Z_DATA_ID, sizeof(real_Z_AXIS_A), &real_Z_AXIS_A);
+  float ACCEL_DATA[3];
+  ACCEL_DATA[0]= real_X_AXIS_A;
+  ACCEL_DATA[1] = real_Y_AXIS_A;
+  ACCEL_DATA[2] =real_Z_AXIS_A;
+
+  roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
+
 
 }//end loop
 uint32_t I2CReceive(uint8_t SlaveAddr, uint8_t reg)
