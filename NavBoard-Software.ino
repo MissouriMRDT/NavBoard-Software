@@ -120,7 +120,7 @@ const uint16_t IMU_MAG_DATA_ID = 1316;
 
 uint64_t gps_lat_lon = 0;
 
-Adafruit_GPS GPS(&Serial7);
+Adafruit_GPS GPS(&Serial6);
 //SoftwareSerial mySerial(3, 2);
 
 void setup()  
