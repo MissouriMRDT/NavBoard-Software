@@ -162,7 +162,7 @@ void loop()
   size_t data_size = 0;
   uint16_t data = 0;
   roveComm_GetMsg(&data_id, &data_size, &data);
-  delay(300);
+  //delay(300);
   
   //int16_t msg = 0;
   //roveComm_SendMsg(301, sizeof(msg), &msg);
@@ -173,7 +173,7 @@ void loop()
   
   char c = GPS.read();
   
-  delay(1);
+  //delay(1);
   
   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
@@ -192,7 +192,7 @@ void loop()
   }//end if
 
   // approximately every 2 seconds or so, print out the current stats
-  if (millis() - timer > 2000) { 
+  if (millis() - timer > 20) { 
     timer = millis(); // reset the timer
    
     //debug
@@ -235,7 +235,6 @@ void loop()
       //Serial.print("Satellites: "); Serial.println(GPS.satellites);      
       roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), &GPS.satellites);
     }//end if
-  }//end if
   
   byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
   byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
@@ -309,6 +308,7 @@ void loop()
 
   roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
 
+  }//end if
 
 }//end loop
 uint32_t I2CReceive(uint8_t SlaveAddr, uint8_t reg)
