@@ -16,94 +16,9 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
-#include <Wire.h> //add arduino I2C library;
+
 //list of all registers binary addresses;
-byte ACT_THS              = 0B00000100;
-byte ACT_DUR              = 0B00000101;
-byte INT_GEN_CFG_XL       = 0B00000110;
-byte INT_GEN_THS_X_XL     = 0B00000111;
-byte INT_GEN_THS_Y_XL     = 0B00001000;
-byte INT_GEN_THS_Z_XL     = 0B00001001;
-byte INT_GEN_DUR_XL       = 0B00001010;
-byte REFERENCE_G          = 0B00001011;
-byte INT1_CTRL            = 0B00001100;
-byte INT2_CTRL            = 0B00001101;
-
-byte WHO_AM_I             = 0B00001111;
-byte CTRL_REG1_G          = 0B00010000;
-byte CTRL_REG2_G          = 0B00010001;
-byte CTRL_REG3_G          = 0B00010010;
-byte ORIENT_CFG_G         = 0B00010011;
-byte INT_GEN_SRC_G        = 0B00010100;
-byte OUT_TEMP_L           = 0B00010101;
-byte OUT_TEMP_H           = 0B00010110;
-byte STATUS_REG           = 0B00010111;
-byte OUT_X_L_G            = 0B00011000;
-byte OUT_X_H_G            = 0B00011001;
-byte OUT_Y_L_G            = 0B00011010;
-byte OUT_Y_H_G            = 0B00011011;
-byte OUT_Z_L_G            = 0B00011100;
-byte OUT_Z_H_G            = 0B00011101;
-byte CTRL_REG4            = 0B00011110;
-byte CTRL_REG5_XL         = 0B00011111;
-byte CTRL_REG6_XL         = 0B00100000;
-byte CTRL_REG7_XL         = 0B00100001;
-byte CTRL_REG8            = 0B00100010;
-byte CTRL_REG9            = 0B00100011;
-byte CTRL_REG10           = 0B00100100;
-
-byte INT_GEN_SRC_XL       = 0B00100110;
-byte STATUS_REG0          = 0B00100111;
-byte OUT_X_L_XL           = 0B00101000;
-byte OUT_X_H_XL           = 0B00101001;
-byte OUT_Y_L_XL           = 0B00101010;
-byte OUT_Y_H_XL           = 0B00101011;
-byte OUT_Z_L_XL           = 0B00101100;
-byte OUT_Z_H_XL           = 0B00101101;
-byte FIFO_CTRL            = 0B00101110;
-byte FIFO_SRC             = 0B00101111;
-byte INT_GEN_CFG_G        = 0B00110000;
-byte INT_GEN_THS_XH_G     = 0B00110001;
-byte INT_GEN_THS_XL_G     = 0B00110010;
-byte INT_GEN_THS_YH_G     = 0B00110011;
-byte INT_GEN_THS_YL_G     = 0B00110100;
-byte INT_GEN_THS_ZH_G     = 0B00110101;
-byte INT_GEN_THS_ZL_G     = 0B00110110;
-byte INT_GEN_DUR_G        = 0B00110111;
-
-
-byte OFFSET_X_REG_L_M     = 0B00000101;
-byte OFFSET_X_REG_H_M     = 0B00000110;
-byte OFFSET_Y_REG_L_M     = 0B00000111;
-byte OFFSET_Y_REG_H_M     = 0B00001000;
-byte OFFSET_Z_REG_L_M     = 0B00001001;
-byte OFFSET_Z_REG_H_M     = 0B00001010;
-
-byte WHO_AM_I_M           = 0B00001111;
-
-byte CTRL_REG1_M          = 0B00100000;
-byte CTRL_REG2_M          = 0B00100001;
-byte CTRL_REG3_M          = 0B00100010;
-byte CTRL_REG4_M          = 0B00100011;
-byte CTRL_REG5_M          = 0B00100100;
-
-byte STATUS_REG_M         = 0B00100111;
-byte OUT_X_L_M            = 0B00101000;
-byte OUT_X_H_M            = 0B00101001;
-byte OUT_Y_L_M            = 0B00101010;
-byte OUT_Y_H_M            = 0B00101011;
-byte OUT_Z_L_M            = 0B00101100;
-byte OUT_Z_H_M            = 0B00101101;
-
-byte INT_CFG_M            = 0B00110000;
-byte INT_SRC_M            = 0B00110001;
-byte INT_THS_L_M          = 0B00110010;
-byte INT_THS_H_M          = 0B00110011;
-
-byte Read    = 0B00000001;
-byte Write   = 0B00000000;
-byte Address_AG =   0B01101011;  //address of accelerometer/gyro with SDO_AG connected to Vdd
-byte Address_M   =   0B00011110;  //address of magnetometer with SDO_M connected to Vdd
+#include "IMUreg.h"
 
 const uint16_t GPS_FIX_QUALITY_DATA_ID = 1296;
 const uint16_t GPS_LAT_LON_DATA_ID = 1297;
@@ -123,24 +38,24 @@ uint64_t gps_lat_lon = 0;
 Adafruit_GPS GPS(&Serial6);
 //SoftwareSerial mySerial(3, 2);
 
-void setup()  
-{   
+void setup()
+{
   Wire.setModule(0);
   Wire.begin();
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   Serial.begin(115200);
-  
+
   //connect to roveComm
   Ethernet.enableActivityLed();
   Ethernet.enableLinkLed();
   roveComm_Begin(192,168,1,133);
   //Serial.println("roveComm_Begin");
-  
+
   //9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
-  
+
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  
+
   //Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
 
@@ -152,49 +67,49 @@ void setup()
   I2CSend(Address_AG, CTRL_REG1_G,0B01100000); //gyro/accel odr and bw
   I2CSend(Address_M, CTRL_REG3_M,0B00000000); //enable mag continuous
 
-}//end 
+}//end
 
 uint32_t timer = millis();
 
-void loop() 
+void loop()
 {
   uint16_t data_id = 0;
   size_t data_size = 0;
   uint16_t data = 0;
   roveComm_GetMsg(&data_id, &data_size, &data);
   //delay(300);
-  
+
   //int16_t msg = 0;
   //roveComm_SendMsg(301, sizeof(msg), &msg);
   //delay(300);
-  
+
   //Serial.print("Looping");
   //delay(1);
-  
+
   char c = GPS.read();
-  
+
   //delay(1);
-  
+
   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
-  
+
     if (!GPS.parse(GPS.lastNMEA() ) )// this also sets the newNMEAreceived() flag to false
-    {   
+    {
       return;  // we can fail to parse a sentence in which case we should just wait for another
     }//end if
-    
+
   }//end if
 
   // if millis() or timer wraps around, we'll just reset it
-  if (timer > millis()) 
+  if (timer > millis())
   {
     timer = millis();
   }//end if
 
   // approximately every 2 seconds or so, print out the current stats
-  if (millis() - timer > 20) { 
+  if (millis() - timer > 20) {
     timer = millis(); // reset the timer
-   
+
     //debug
     /*
     GPS.fix = true;
@@ -210,32 +125,32 @@ void loop()
     {
       GPS.fixquality = 0;
     }//end if
-    
+
     //Serial.print(" quality: "); Serial.println(GPS.fixquality);
     roveComm_SendMsg(GPS_FIX_QUALITY_DATA_ID, sizeof(GPS.fixquality), &GPS.fixquality);
-    
-    if (GPS.fix) 
-    {  
+
+    if (GPS.fix)
+    {
       //TODO: VERIFY ADAFRUIT_GPS PULL #13
       gps_lat_lon = GPS.latitude_fixed;
       gps_lat_lon = gps_lat_lon << 32;
       gps_lat_lon += GPS.longitude_fixed;
-      
+
       roveComm_SendMsg(GPS_LAT_LON_DATA_ID, sizeof(gps_lat_lon), &gps_lat_lon);
-      
+
       //Serial.print("Speed (knots): "); Serial.println(GPS.speed);
       roveComm_SendMsg(GPS_SPEED_DATA_ID, sizeof(GPS.speed), &GPS.speed);
-      
+
       //Serial.print("Angle: "); Serial.println(GPS.angle);
       roveComm_SendMsg(GPS_ANGLE_DATA_ID, sizeof(GPS.angle), &GPS.angle);
-      
+
       //Serial.print("Altitude: "); Serial.println(GPS.altitude);
       roveComm_SendMsg(GPS_ALTITUDE_DATA_ID, sizeof(GPS.altitude), &GPS.altitude);
-      
-      //Serial.print("Satellites: "); Serial.println(GPS.satellites);      
+
+      //Serial.print("Satellites: "); Serial.println(GPS.satellites);
       roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), &GPS.satellites);
     }//end if
-  
+
   byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
   byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
   byte Y_L = I2CReceive(Address_AG, OUT_Y_L_G);
@@ -247,15 +162,15 @@ void loop()
   int16_t Y_AXIs = Y_H <<8 | Y_L;
   int16_t Z_AXIs = Z_H <<8 | Z_L;
 
-  
+
   float real_X_Axis =0.00875*(X_AXIs-320);
   float real_Y_Axis =0.00875*(Y_AXIs-17);
   float real_Z_Axis =0.00875*(Z_AXIs+190);
   float GYRO_DATA[3] = {real_X_Axis, real_Y_Axis, real_Z_Axis};
   roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
 
-                                         
-                                              
+
+
   //accelerometer/magnetometer section
   byte X_L_M = I2CReceive(Address_M, OUT_X_L_M);//Magnetometer data expressed as two's complement
   byte X_H_M = I2CReceive(Address_M, OUT_X_H_M);
@@ -350,31 +265,30 @@ uint32_t I2CReceive(uint8_t SlaveAddr, uint8_t reg)
 void I2CSend(uint8_t slave_addr, uint8_t reg, uint8_t data)
 {
     uint32_t i2cBase = I2C0_BASE;
-    
+
     // Tell the master module what address it will place on the bus when
     // communicating with the slave.
     I2CMasterSlaveAddrSet(i2cBase, slave_addr, false);
-     
+
     //put data to be sent into FIFO
     I2CMasterDataPut(i2cBase, reg);
-     
+
         //Initiate send of data from the MCU
         I2CMasterControl(i2cBase, I2C_MASTER_CMD_BURST_SEND_START);
-         
+
   //wait for MCU to start transaction
     while(!I2CMasterBusy(i2cBase));
-    
+
         // Wait until MCU is done transferring.
         while(I2CMasterBusy(i2cBase));
 
         I2CMasterDataPut(i2cBase, data);
 
         I2CMasterControl(i2cBase, I2C_MASTER_CMD_BURST_SEND_FINISH);
-        
+
   //wait for MCU to start transaction
     while(!I2CMasterBusy(i2cBase));
-    
+
         // Wait until MCU is done transferring.
         while(I2CMasterBusy(i2cBase));
 }
-
