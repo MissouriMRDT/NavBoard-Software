@@ -1,9 +1,12 @@
+#include <Quaternion.h>
+
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
-#include "RoveEthernet.h"
+#include "RoveBoard.h"
 #include "RoveComm.h"
+#include "Quaternion.h"
 
 #include <Adafruit_GPS.h>
 //#include <SoftwareSerial.h>
@@ -32,6 +35,8 @@ const uint16_t IMU_ACCEL_DATA_ID = 1314;
 const uint16_t IMU_GYRO_DATA_ID = 1315;
 const uint16_t IMU_MAG_DATA_ID = 1316;
 
+Quaternion fusion;
+
 
 uint64_t gps_lat_lon = 0;
 
@@ -58,7 +63,7 @@ void setup()
 
   //Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
-
+  
   //Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
 
@@ -78,7 +83,7 @@ void loop()
   uint16_t data = 0;
   roveComm_GetMsg(&data_id, &data_size, &data);
   //delay(300);
-
+	
   //int16_t msg = 0;
   //roveComm_SendMsg(301, sizeof(msg), &msg);
   //delay(300);
@@ -222,6 +227,19 @@ void loop()
   ACCEL_DATA[2] =real_Z_AXIS_A;
 
   roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
+  fusion.calculateLoop(GYRO_DATA, ACCEL_DATA, MAG_DATA);
+  Serial.print("Pitch ");
+  Serial.print(fusion.getPitch());
+  Serial.print(  + "\n");
+  Serial.print("Roll ");
+  Serial.print(fusion.getRoll());
+  Serial.print(  + "\n");
+  Serial.print("Heading ");
+  Serial.print(fusion.getHeading());
+  Serial.print(  + "\n");
+  Serial.print("True Heading ");
+  Serial.print(fusion.getHeading());
+  Serial.print(  + "\n");
 
   }//end if
 
