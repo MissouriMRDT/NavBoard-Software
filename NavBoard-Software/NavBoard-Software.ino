@@ -228,9 +228,20 @@ void loop()
   ACCEL_DATA[2] =real_Z_AXIS_A;
 
   roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
-  Serial.print("Accel 1 ");
-  Serial.print(ACCEL_DATA[0]);
+  
+  //This is to compute the runtime for the pitch, yaw, roll calculations
+  
+  /*
+  unsigned long start = micros();
+  unsigned long end = micros();
+  unsigned long delta = end - start;
+  Serial.print("Run time");
+  Serial.print(delta);
+  Serial.print("\n");
+  */
+  
   fusion.calculateLoop(GYRO_DATA, ACCEL_DATA, MAG_DATA);
+
   Serial.print("Pitch ");
   Serial.print(fusion.getPitch());
   Serial.print(  + "\n");

@@ -23,8 +23,8 @@
 	  q[1] = 0.0;
 	  q[2] = 0.0; 
 	  q[3] = 0.0;
-      GyroMeasError = radians(40);
-      beta = sqrt(3.0 / 4.0) * GyroMeasError;  // compute beta
+      GyroMeasError = radians(600); // adjust this value to adjust between accuracy and speed
+      beta = sqrt(3.0 / 4.0) * GyroMeasError;  // compute betas
       pitch = 0;
       heading = 0;
       headingOffset = 0;
