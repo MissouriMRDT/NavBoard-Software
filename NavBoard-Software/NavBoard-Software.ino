@@ -61,6 +61,7 @@ void setup()
 
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
 
+  fusion.init();
   //Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   
@@ -227,6 +228,8 @@ void loop()
   ACCEL_DATA[2] =real_Z_AXIS_A;
 
   roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
+  Serial.print("Accel 1 ");
+  Serial.print(ACCEL_DATA[0]);
   fusion.calculateLoop(GYRO_DATA, ACCEL_DATA, MAG_DATA);
   Serial.print("Pitch ");
   Serial.print(fusion.getPitch());

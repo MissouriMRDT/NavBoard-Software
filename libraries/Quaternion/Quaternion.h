@@ -12,14 +12,10 @@ class Quaternion
       int pitchAdjust = 90;
       float magbias[3];
       float q[4];
-      float GyroMeasError;
-      float beta;  // compute beta
-      float pitch;
-      float heading;
-      float headingOffset;
-      float trueHeading;
-      float roll;
-      float deltat;
+      float GyroMeasError = 0;
+      float beta = 0;  // compute beta
+      float headingOffset = 0;
+      float deltat = 0;
       float magmax[3];
       float magmin[3];
 
@@ -30,6 +26,10 @@ class Quaternion
       float getRoll();
       float getHeading();
       float getTrueHeading();
+	  float pitch = 0;
+      float roll = 0;
+      float heading = 0;
+      float trueHeading = 0;
 
 
 };

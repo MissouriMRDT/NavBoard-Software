@@ -16,18 +16,27 @@
 
     void Quaternion::init()
     {
-      float magbias[3] = {0,0,0};
-      float q[4] = {1.0,0.0,0.0,0.0};
-      float GyroMeasError = radians(40);
-      float beta = sqrt(3.0 / 4.0) * GyroMeasError;  // compute beta
-      float pitch = 0;
-      float heading = 0;
-      float headingOffset = 0;
-      float trueHeading = 0;
-      float roll = 0;
-      float deltat = .0025;
-      float magmax[3] = {0.5128200054168701, 0.436379998922348, 0.4745999872684479};
-      float magmin[3] = {-0.2232999950647354, -0.08525999635457993, -0.20509999990463257};
+      magbias[0] = 0;
+	  magbias[1] = 0;
+	  magbias[2] = 0;
+      q[0] = 1.0;
+	  q[1] = 0.0;
+	  q[2] = 0.0; 
+	  q[3] = 0.0;
+      GyroMeasError = radians(40);
+      beta = sqrt(3.0 / 4.0) * GyroMeasError;  // compute beta
+      pitch = 0;
+      heading = 0;
+      headingOffset = 0;
+      trueHeading = 0;
+      roll = 0;
+      deltat = .0025;
+      magmax[0] = 0.5128200054168701;
+	  magmax[1] = 0.436379998922348;
+	  magmax[2] = 0.4745999872684479;
+      magmin[0] = -0.2232999950647354;
+	  magmin[1] = -0.08525999635457993;
+	  magmin[2] = -0.20509999990463257;
       magbias[0] = (magmax[0] + magmin[0])/2;
       magbias[1] = (magmax[1] + magmin[1])/2;
       magbias[2] = (magmax[2] + magmin[2])/2;
@@ -154,7 +163,7 @@
                                                             * q[2] - q[3] * q[3]));
             trueHeading = fmod((((heading - 360) * -1) - headingOffset), (float)360);
 
-            roll = -degrees(-asin(2.0 * (q[1] * q[3] - q[0] * q[2])));
+            roll = (float)(-degrees(-asin(2.0 * (q[1] * q[3] - q[0] * q[2]))))+100;
             pitch = pitchAdjust + degrees(atan2(2.0 * (q[0] * q[1] + q[2] * q[3]),
                                                           q[0] * q[0] - q[1] * q[1] - q[2]
                                                           * q[2] + q[3] * q[3]));
@@ -162,20 +171,20 @@
 
 	float Quaternion::getHeading()
 	{
-    return heading;
+		return heading;
 	}
 
 	float Quaternion::getPitch()
 	{
-    return pitch;
+		return pitch;
 	}
 
-  float Quaternion::getRoll()
-  {
-    return roll;
-  }
+	float Quaternion::getRoll()
+	{
+		return roll;
+	}
 
-  float Quaternion::getTrueHeading()
-  {
-    return trueHeading;
-  }
+	float Quaternion::getTrueHeading()
+	{
+		return trueHeading;
+	}
