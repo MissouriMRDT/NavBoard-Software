@@ -1,5 +1,3 @@
-#include <Quaternion.h>
-
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
@@ -31,9 +29,9 @@ const uint16_t GPS_ALTITUDE_DATA_ID = 1300;
 const uint16_t GPS_SATELLITES_DATA_ID = 1301;
 
 const uint16_t IMU_TEMP_DATA_ID = 1313;
-const uint16_t IMU_ACCEL_DATA_ID = 1314;
-const uint16_t IMU_GYRO_DATA_ID = 1315;
-const uint16_t IMU_MAG_DATA_ID = 1316;
+const uint16_t IMU_PITCH_DATA_ID = 1314;
+const uint16_t IMU_ROLL_DATA_ID = 1315;
+const uint16_t IMU_HEADING_DATA_ID = 1316;
 
 Quaternion fusion;
 
@@ -42,6 +40,120 @@ uint64_t gps_lat_lon = 0;
 
 Adafruit_GPS GPS(&Serial6);
 //SoftwareSerial mySerial(3, 2);
+
+void gyroReading(float gyro[3])
+{
+  byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
+  byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
+  byte Y_L = I2CReceive(Address_AG, OUT_Y_L_G);
+  byte Y_H = I2CReceive(Address_AG, OUT_Y_H_G);
+  byte Z_L = I2CReceive(Address_AG, OUT_Z_L_G);
+  byte Z_H = I2CReceive(Address_AG, OUT_Z_H_G);
+
+  int16_t X_AXIs = X_H <<8 | X_L;
+  int16_t Y_AXIs = Y_H <<8 | Y_L;
+  int16_t Z_AXIs = Z_H <<8 | Z_L;
+
+
+  float real_X_Axis =0.00875*(X_AXIs-320);
+  float real_Y_Axis =0.00875*(Y_AXIs-17);
+  float real_Z_Axis =0.00875*(Z_AXIs+190);
+  gyro[0] = real_X_Axis;
+  gyro[1] = real_Y_Axis;
+  gyro[2] = real_Z_Axis;
+}
+
+void accelerometerReading(float accel[3])
+{
+  byte X_L_A = I2CReceive(Address_AG, OUT_X_L_XL);//Output acceleration in x-axis as a 16-bit word in two's complement
+  byte X_H_A = I2CReceive(Address_AG, OUT_X_H_XL);
+  byte Y_L_A = I2CReceive(Address_AG, OUT_Y_L_XL);
+  byte Y_H_A = I2CReceive(Address_AG, OUT_Y_H_XL);
+  byte Z_L_A = I2CReceive(Address_AG, OUT_Z_L_XL);
+  byte Z_H_A = I2CReceive(Address_AG, OUT_Z_H_XL);
+
+  
+  int16_t X_AXIS_A = X_H_A <<8 | X_L_A;
+  int16_t Y_AXIS_A = Y_H_A <<8 | Y_L_A;
+  int16_t Z_AXIS_A = Z_H_A <<8 | Z_L_A;
+  
+  float real_X_AXIS_A = X_AXIS_A*0.000061;
+  float real_Y_AXIS_A = Y_AXIS_A*0.000061;
+  float real_Z_AXIS_A = Z_AXIS_A*0.000061;
+
+  accel[0] = real_X_AXIS_A;
+  accel[1] = real_Y_AXIS_A;
+  accel[2] = real_Z_AXIS_A;
+  
+  
+}
+
+void magnetometerReading(float mag[3])
+{
+  byte X_L_M = I2CReceive(Address_M, OUT_X_L_M);//Magnetometer data expressed as two's complement
+  byte X_H_M = I2CReceive(Address_M, OUT_X_H_M);
+  byte Y_L_M = I2CReceive(Address_M, OUT_Y_L_M);
+  byte Y_H_M = I2CReceive(Address_M, OUT_Y_H_M);
+  byte Z_L_M = I2CReceive(Address_M, OUT_Z_L_M);
+  byte Z_H_M = I2CReceive(Address_M, OUT_Z_H_M);
+  
+  int16_t X_AXIS_M = X_H_M <<8 | X_L_M;
+  int16_t Y_AXIS_M = Y_H_M <<8 | Y_L_M;
+  int16_t Z_AXIS_M = Z_H_M <<8 | Z_L_M;
+  
+  float real_X_Axis_M = X_AXIS_M*0.00014;
+  float real_Y_Axis_M = Y_AXIS_M*0.00014;
+  float real_Z_Axis_M = Z_AXIS_M*0.00014;
+  float MAG_DATA[3];
+  mag[0]= real_X_Axis_M;
+  mag[1] = real_Y_Axis_M;
+  mag[2] = real_Z_Axis_M;
+}
+
+void calibrateMagnetometer()
+{
+	float time = micros();
+	float magXmin = 32767;
+	float magYmin = 32767;
+	float magZmin = 32767;
+	float magXmax = -32767;
+	float magYmax = -32767;
+	float magZmax = -32767;
+	//hackish way of running this loop for approx. 10 seconds
+	while(micros() - time < 10000000)
+	{
+		float MAG_DATA[3];
+		magnetometerReading(MAG_DATA);
+
+		if(MAG_DATA[0] > magXmax){ magXmax = MAG_DATA[0]; } 
+		if(MAG_DATA[1] > magYmax){ magYmax = MAG_DATA[1]; }
+		if(MAG_DATA[2] > magZmax){ magZmax = MAG_DATA[2]; }
+
+		if(MAG_DATA[0] < magXmin){ magXmin = MAG_DATA[0]; }
+		if(MAG_DATA[1] < magYmin){ magYmin = MAG_DATA[1]; }
+		if(MAG_DATA[2] < magZmin){ magZmin = MAG_DATA[2]; }
+	}
+	
+	 Serial.print("MagMinX ");
+	 Serial.print(magXmin);
+     Serial.print(  + "\n");
+	 Serial.print("MagMinY ");
+	 Serial.print(magYmin);
+     Serial.print(  + "\n");
+	 Serial.print("MagMinZ ");
+	 Serial.print(magZmin);
+     Serial.print(  + "\n");
+	 Serial.print("MagMaxX ");
+	 Serial.print(magXmax);
+     Serial.print(  + "\n");
+	 Serial.print("MagMaxY ");
+	 Serial.print(magYmax);
+     Serial.print(  + "\n");
+	 Serial.print("MagMaxZ ");
+	 Serial.print(magZmax);
+     Serial.print(  + "\n");	 
+
+}
 
 void setup()
 {
@@ -72,7 +184,7 @@ void setup()
   I2CSend(Address_AG, CTRL_REG5_XL,0B00111000); //enable accelerometer
   I2CSend(Address_AG, CTRL_REG1_G,0B01100000); //gyro/accel odr and bw
   I2CSend(Address_M, CTRL_REG3_M,0B00000000); //enable mag continuous
-
+  //calibrateMagnetometer();
 }//end
 
 uint32_t timer = millis();
@@ -157,48 +269,6 @@ void loop()
       roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), &GPS.satellites);
     }//end if
 
-  byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
-  byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
-  byte Y_L = I2CReceive(Address_AG, OUT_Y_L_G);
-  byte Y_H = I2CReceive(Address_AG, OUT_Y_H_G);
-  byte Z_L = I2CReceive(Address_AG, OUT_Z_L_G);
-  byte Z_H = I2CReceive(Address_AG, OUT_Z_H_G);
-
-  int16_t X_AXIs = X_H <<8 | X_L;
-  int16_t Y_AXIs = Y_H <<8 | Y_L;
-  int16_t Z_AXIs = Z_H <<8 | Z_L;
-
-
-  float real_X_Axis =0.00875*(X_AXIs-320);
-  float real_Y_Axis =0.00875*(Y_AXIs-17);
-  float real_Z_Axis =0.00875*(Z_AXIs+190);
-  float GYRO_DATA[3] = {real_X_Axis, real_Y_Axis, real_Z_Axis};
-  roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
-
-
-
-  //accelerometer/magnetometer section
-  byte X_L_M = I2CReceive(Address_M, OUT_X_L_M);//Magnetometer data expressed as two's complement
-  byte X_H_M = I2CReceive(Address_M, OUT_X_H_M);
-  byte Y_L_M = I2CReceive(Address_M, OUT_Y_L_M);
-  byte Y_H_M = I2CReceive(Address_M, OUT_Y_H_M);
-  byte Z_L_M = I2CReceive(Address_M, OUT_Z_L_M);
-  byte Z_H_M = I2CReceive(Address_M, OUT_Z_H_M);
-
-  byte X_L_A = I2CReceive(Address_AG, OUT_X_L_XL);//Output acceleration in x-axis as a 16-bit word in two's complement
-  byte X_H_A = I2CReceive(Address_AG, OUT_X_H_XL);
-  byte Y_L_A = I2CReceive(Address_AG, OUT_Y_L_XL);
-  byte Y_H_A = I2CReceive(Address_AG, OUT_Y_H_XL);
-  byte Z_L_A = I2CReceive(Address_AG, OUT_Z_L_XL);
-  byte Z_H_A = I2CReceive(Address_AG, OUT_Z_H_XL);
-
-  int16_t X_AXIS_M = X_H_M <<8 | X_L_M;
-  int16_t Y_AXIS_M = Y_H_M <<8 | Y_L_M;
-  int16_t Z_AXIS_M = Z_H_M <<8 | Z_L_M;
-
-  int16_t X_AXIS_A = X_H_A <<8 | X_L_A;
-  int16_t Y_AXIS_A = Y_H_A <<8 | Y_L_A;
-  int16_t Z_AXIS_A = Z_H_A <<8 | Z_L_A;
 
   //temperature section
   byte Temp_L = I2CReceive(Address_AG, OUT_TEMP_L);
@@ -207,41 +277,19 @@ void loop()
   int16_t Temp = Temp_H <<8 | Temp_L;
   float real_Temp = (Temp/16.0)+25;
   roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(real_Temp), &real_Temp);
-
-  float real_X_Axis_M = X_AXIS_M*0.00014;
-  float real_Y_Axis_M = Y_AXIS_M*0.00014;
-  float real_Z_Axis_M = Z_AXIS_M*0.00014;
+  
+  float GYRO_DATA[3];
+  gyroReading(GYRO_DATA);
+  
   float MAG_DATA[3];
-  MAG_DATA[0]= real_X_Axis_M;
-  MAG_DATA[1] = real_Y_Axis_M;
-  MAG_DATA[2] = real_Z_Axis_M;
-  roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
-
-
-  float real_X_AXIS_A = X_AXIS_A*0.000061;
-  float real_Y_AXIS_A = Y_AXIS_A*0.000061;
-  float real_Z_AXIS_A = Z_AXIS_A*0.000061;
+  magnetometerReading(MAG_DATA);
 
   float ACCEL_DATA[3];
-  ACCEL_DATA[0]= real_X_AXIS_A;
-  ACCEL_DATA[1] = real_Y_AXIS_A;
-  ACCEL_DATA[2] =real_Z_AXIS_A;
-
-  roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
-  
-  //This is to compute the runtime for the pitch, yaw, roll calculations
-  
-  /*
-  unsigned long start = micros();
-  unsigned long end = micros();
-  unsigned long delta = end - start;
-  Serial.print("Run time");
-  Serial.print(delta);
-  Serial.print("\n");
-  */
+  accelerometerReading(ACCEL_DATA);
   
   fusion.calculateLoop(GYRO_DATA, ACCEL_DATA, MAG_DATA);
 
+  
   Serial.print("Pitch ");
   Serial.print(fusion.getPitch());
   Serial.print(  + "\n");
@@ -252,8 +300,12 @@ void loop()
   Serial.print(fusion.getHeading());
   Serial.print(  + "\n");
   Serial.print("True Heading ");
-  Serial.print(fusion.getHeading());
-  Serial.print(  + "\n");
+  Serial.print(fusion.getTrueHeading());
+
+  
+  //roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
+  //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
+  //roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
 
   }//end if
 

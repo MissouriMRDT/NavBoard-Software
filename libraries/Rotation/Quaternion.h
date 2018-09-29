@@ -4,11 +4,10 @@
 #include <Math.h>
 
 
-using namespace std;
 class Quaternion
 {
     private:
-      int declination = 180;                        // Optional offset for true north. A +ve value adds to heading
+      int declination = 0;                        // Optional offset for true north. A +ve value adds to heading
       int pitchAdjust = 90;
       float magbias[3];
       float q[4];
