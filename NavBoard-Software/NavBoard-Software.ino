@@ -29,9 +29,9 @@ const uint16_t GPS_ALTITUDE_DATA_ID = 1300;
 const uint16_t GPS_SATELLITES_DATA_ID = 1301;
 
 const uint16_t IMU_TEMP_DATA_ID = 1313;
-const uint16_t IMU_PITCH_DATA_ID = 1314;
-const uint16_t IMU_ROLL_DATA_ID = 1315;
-const uint16_t IMU_HEADING_DATA_ID = 1316;
+const uint16_t IMU_PITCH_DATA_ID = 1314;//Currently not updated on client side
+const uint16_t IMU_ROLL_DATA_ID = 1315; //Currently not updated on client side
+const uint16_t IMU_HEADING_DATA_ID = 1316;//Currently not updated on client side
 
 Quaternion fusion;
 
@@ -58,6 +58,7 @@ void gyroReading(float gyro[3])
   float real_X_Axis =0.00875*(X_AXIs-320);
   float real_Y_Axis =0.00875*(Y_AXIs-17);
   float real_Z_Axis =0.00875*(Z_AXIs+190);
+  
   gyro[0] = real_X_Axis;
   gyro[1] = real_Y_Axis;
   gyro[2] = real_Z_Axis;
@@ -80,6 +81,7 @@ void accelerometerReading(float accel[3])
   float real_X_AXIS_A = X_AXIS_A*0.000061;
   float real_Y_AXIS_A = Y_AXIS_A*0.000061;
   float real_Z_AXIS_A = Z_AXIS_A*0.000061;
+  
 
   accel[0] = real_X_AXIS_A;
   accel[1] = real_Y_AXIS_A;
@@ -104,6 +106,7 @@ void magnetometerReading(float mag[3])
   float real_X_Axis_M = X_AXIS_M*0.00014;
   float real_Y_Axis_M = Y_AXIS_M*0.00014;
   float real_Z_Axis_M = Z_AXIS_M*0.00014;
+  
   float MAG_DATA[3];
   mag[0]= real_X_Axis_M;
   mag[1] = real_Y_Axis_M;
@@ -112,46 +115,46 @@ void magnetometerReading(float mag[3])
 
 void calibrateMagnetometer()
 {
-	float time = micros();
-	float magXmin = 32767;
-	float magYmin = 32767;
-	float magZmin = 32767;
-	float magXmax = -32767;
-	float magYmax = -32767;
-	float magZmax = -32767;
-	//hackish way of running this loop for approx. 10 seconds
-	while(micros() - time < 10000000)
-	{
-		float MAG_DATA[3];
-		magnetometerReading(MAG_DATA);
+    float magXmin = 32767;
+    float magYmin = 32767;
+    float magZmin = 32767;
+    float magXmax = -32767;
+    float magYmax = -32767;
+    float magZmax = -32767;
+    float time = micros();
+    //hackish way of running this loop for approx. 10 seconds
+    while(micros() - time < 10000000)
+    {
+        float MAG_DATA[3];
+        magnetometerReading(MAG_DATA);
 
-		if(MAG_DATA[0] > magXmax){ magXmax = MAG_DATA[0]; } 
-		if(MAG_DATA[1] > magYmax){ magYmax = MAG_DATA[1]; }
-		if(MAG_DATA[2] > magZmax){ magZmax = MAG_DATA[2]; }
+        if(MAG_DATA[0] > magXmax){ magXmax = MAG_DATA[0]; } 
+        if(MAG_DATA[1] > magYmax){ magYmax = MAG_DATA[1]; }
+        if(MAG_DATA[2] > magZmax){ magZmax = MAG_DATA[2]; }
 
-		if(MAG_DATA[0] < magXmin){ magXmin = MAG_DATA[0]; }
-		if(MAG_DATA[1] < magYmin){ magYmin = MAG_DATA[1]; }
-		if(MAG_DATA[2] < magZmin){ magZmin = MAG_DATA[2]; }
-	}
-	
-	 Serial.print("MagMinX ");
-	 Serial.print(magXmin);
+        if(MAG_DATA[0] < magXmin){ magXmin = MAG_DATA[0]; }
+        if(MAG_DATA[1] < magYmin){ magYmin = MAG_DATA[1]; }
+        if(MAG_DATA[2] < magZmin){ magZmin = MAG_DATA[2]; }
+     }
+     //outputs to serial monitor, will then need to be manually implemented in Quaternion.cpp
+     Serial.print("MagMinX ");
+     Serial.print(magXmin);
      Serial.print(  + "\n");
-	 Serial.print("MagMinY ");
-	 Serial.print(magYmin);
+     Serial.print("MagMinY ");
+     Serial.print(magYmin);
      Serial.print(  + "\n");
-	 Serial.print("MagMinZ ");
-	 Serial.print(magZmin);
+     Serial.print("MagMinZ ");
+     Serial.print(magZmin);
      Serial.print(  + "\n");
-	 Serial.print("MagMaxX ");
-	 Serial.print(magXmax);
+     Serial.print("MagMaxX ");
+     Serial.print(magXmax);
      Serial.print(  + "\n");
-	 Serial.print("MagMaxY ");
-	 Serial.print(magYmax);
+     Serial.print("MagMaxY ");
+     Serial.print(magYmax);
      Serial.print(  + "\n");
-	 Serial.print("MagMaxZ ");
-	 Serial.print(magZmax);
-     Serial.print(  + "\n");	 
+     Serial.print("MagMaxZ ");
+     Serial.print(magZmax);
+     Serial.print(  + "\n");
 
 }
 
@@ -196,7 +199,7 @@ void loop()
   uint16_t data = 0;
   roveComm_GetMsg(&data_id, &data_size, &data);
   //delay(300);
-	
+  
   //int16_t msg = 0;
   //roveComm_SendMsg(301, sizeof(msg), &msg);
   //delay(300);
@@ -224,8 +227,9 @@ void loop()
     timer = millis();
   }//end if
 
-  // approximately every 2 seconds or so, print out the current stats
-  if (millis() - timer > 20) {
+  // approximately every 2 milliseconds or so, print out the current stats
+  uint32_t atimer = millis();
+  if (millis() - timer > 2) {
     timer = millis(); // reset the timer
 
     //debug
@@ -283,12 +287,13 @@ void loop()
   
   float MAG_DATA[3];
   magnetometerReading(MAG_DATA);
-
+  
   float ACCEL_DATA[3];
   accelerometerReading(ACCEL_DATA);
   
-  fusion.calculateLoop(GYRO_DATA, ACCEL_DATA, MAG_DATA);
-
+  Serial.print("Updating");
+  fusion.updateMadgwick(GYRO_DATA, ACCEL_DATA, MAG_DATA);
+  
   
   Serial.print("Pitch ");
   Serial.print(fusion.getPitch());
@@ -301,13 +306,15 @@ void loop()
   Serial.print(  + "\n");
   Serial.print("True Heading ");
   Serial.print(fusion.getTrueHeading());
-
+  
   
   //roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
   //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
   //roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
 
   }//end if
+  
+  
 
 }//end loop
 uint32_t I2CReceive(uint8_t SlaveAddr, uint8_t reg)
