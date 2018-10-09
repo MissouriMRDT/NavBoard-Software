@@ -1,8 +1,7 @@
+//source: https://github.com/micropython-IMU/micropython-fusion/blob/master/fusion.py
+//also https://github.com/kriswiner/MPU-9250.git
+
 #include "Quaternion.h"
-
-
-    //Class provides sensor fusion allowing heading, pitch and roll to be extracted. This uses the Madgwick algorithm.
-    //The update method must be called periodically. The calculations take 1.6mS on the Pyboard.
 
     float radians(float degrees)
     {

@@ -31,7 +31,7 @@ const uint16_t GPS_SATELLITES_DATA_ID = 1301;
 const uint16_t IMU_TEMP_DATA_ID = 1313;
 const uint16_t IMU_PITCH_DATA_ID = 1314;//Currently not updated on client side
 const uint16_t IMU_ROLL_DATA_ID = 1315; //Currently not updated on client side
-const uint16_t IMU_HEADING_DATA_ID = 1316;//Currently not updated on client side
+const uint16_t IMU_TRUE_HEADING_DATA_ID = 1316;//Currently not updated on client side
 
 Quaternion fusion;
 
@@ -228,8 +228,9 @@ void loop()
   }//end if
 
   // approximately every 2 milliseconds or so, print out the current stats
+  // test this value with varying update frequencies
   uint32_t atimer = millis();
-  if (millis() - timer > 2) {
+  if (millis() - timer > 200) {
     timer = millis(); // reset the timer
 
     //debug
