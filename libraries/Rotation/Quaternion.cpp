@@ -1,7 +1,8 @@
-//source: https://github.com/micropython-IMU/micropython-fusion/blob/master/fusion.py
-//also https://github.com/kriswiner/MPU-9250.git
-
 #include "Quaternion.h"
+
+
+    //Class provides sensor fusion allowing heading, pitch and roll to be extracted. This uses the Madgwick algorithm.
+    //The update method must be called periodically. The calculations take 1.6mS on the Pyboard.
 
     float radians(float degrees)
     {
@@ -22,14 +23,14 @@
       q[1] = 0.0;
       q[2] = 0.0; 
       q[3] = 0.0;
-      GyroMeasError = radians(3500); // adjust this value to adjust between accuracy and speed
+      GyroMeasError = radians(40); // adjust this value to adjust between accuracy and speed
       beta = sqrt(3.0 / 4.0) * GyroMeasError;  // compute betas
       pitch = 0;
       heading = 0;
       headingOffset = 0;
       trueHeading = 0;
       roll = 0;
-      deltat = .0025;
+      deltat = .25;
 	  //in the form x,y,z  (0,1,2) 
       magmax[0] =  0.56;
       magmax[1] =  -0.0836379998922348;
@@ -147,9 +148,9 @@
             q[2] = q3 * norm;
             q[3] = q4 * norm;
  
-            heading   = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);   
-            roll = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
-            pitch  = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
+            heading   = atan2f(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);   
+            roll = -asinf(2.0f * (q[1] * q[3] - q[0] * q[2]));
+            pitch  = atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
             roll *= 180.0f / PI_VAL;
             heading   *= 180.0f / PI_VAL; 
             heading   -= 1.25; // Declination (update to include competition value

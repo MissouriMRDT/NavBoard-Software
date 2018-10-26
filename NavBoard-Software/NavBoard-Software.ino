@@ -164,6 +164,7 @@ void setup()
   Wire.begin();
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   Serial.begin(115200);
+  Serial.print("enabled serial!");
 
   //connect to roveComm
   Ethernet.enableActivityLed();

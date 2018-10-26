@@ -9,7 +9,6 @@ class Quaternion
     private:
       const float PI_VAL = 3.14159265359;
   
-      int   declination = 180;                        // Optional offset for true north. A +ve value adds to heading
       int   pitchAdjust = 90;
   
       float magbias[3];
@@ -39,5 +38,3 @@ class Quaternion
 
 
 #endif
-
-
