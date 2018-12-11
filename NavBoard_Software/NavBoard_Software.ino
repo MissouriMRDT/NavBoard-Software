@@ -205,8 +205,8 @@ void loop()
   Serial.println("");
   Serial.println("");
   Serial.println("Updating");
-  fusion.MadgwickQuaternionUpdate(IMUData.gyro, IMUData.accel, IMUData.mag);
-  //fusion.updateMadgwick(IMUData.gyro, IMUData.accel, IMUData.mag);
+  //fusion.MadgwickQuaternionUpdate(IMUData.gyro, IMUData.accel, IMUData.mag);
+  fusion.updateMadgwick(IMUData.gyro, IMUData.accel, IMUData.mag);
   
   
   Serial.print("Pitch ");
