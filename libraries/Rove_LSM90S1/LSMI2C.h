@@ -1,5 +1,5 @@
-#ifndef _RoveWire
-#define _RoveWire
+#ifndef _LSMI2CWire
+#define _LSMI2CWire
 
 #include "Wire.h"
 #include "inc/hw_i2c.h"

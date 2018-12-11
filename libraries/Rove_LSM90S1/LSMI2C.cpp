@@ -1,4 +1,4 @@
-#include "RoveWire.h"
+#include "LSMI2C.h"
 
 #include "Wire.h"
 #include "inc/hw_i2c.h"
@@ -9,6 +9,9 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
+#include "Energia.h"
+
+#define I2C_NOSTOP false
 
 uint32_t I2CReceive(uint8_t SlaveAddr, uint8_t reg)
 {

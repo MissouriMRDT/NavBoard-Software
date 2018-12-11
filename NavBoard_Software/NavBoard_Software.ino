@@ -27,7 +27,6 @@ const uint16_t IMU_TRUE_HEADING_DATA_ID = 1316;//Currently not updated on client
 Quaternion fusion;
 
 LSM90S1 IMU;
-LSM90S1Data IMUData;
 
 uint64_t gps_lat_lon = 0;
 
@@ -85,7 +84,7 @@ void setup()
   Wire.begin();
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   Serial.begin(115200);
-  Serial.print("enabled serial!");
+  Serial.println("Serial begin");
 
   //connect to roveComm
   Ethernet.enableActivityLed();
@@ -105,7 +104,11 @@ void setup()
   //Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
   IMU.begin();
-  //calibrateMagnetometer();
+  delay(10);
+  IMU.calibrateMag(10000);
+  IMU.calibrateGyro(10000);
+  IMU.calibrateAccel(1000);
+  
 }//end
 
 uint32_t timer = millis();
@@ -198,29 +201,37 @@ void loop()
   IMU.readTemp(temperature);
   roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
 
-  IMUData=IMU.read();
-
   //IMU.print(IMUData);
     
   Serial.println("");
   Serial.println("");
   Serial.println("Updating");
+  IMU.read();
+  //IMU.printRaw();
+  IMU.printCal();
   //fusion.MadgwickQuaternionUpdate(IMUData.gyro, IMUData.accel, IMUData.mag);
-  fusion.updateMadgwick(IMUData.gyro, IMUData.accel, IMUData.mag);
   
   
   Serial.print("Pitch ");
-  Serial.print(fusion.getPitch());
+  Serial.print(IMU.getPitch());
   Serial.print(  + "\n");
   Serial.print("Roll ");
-  Serial.print(fusion.getRoll());
+  Serial.print(IMU.getRoll());
   Serial.print(  + "\n");
   Serial.print("Heading ");
-  Serial.print(fusion.getHeading());
+  Serial.print(IMU.getHeading());
   Serial.print(  + "\n");
   Serial.print("True Heading ");
-  Serial.print(fusion.getTrueHeading());
-  
+  Serial.println(IMU.getTrueHeading());
+
+  Serial.print("Q0: ");
+  Serial.println(IMU.quaternion.q[0], 15);
+  Serial.print("Qx: ");
+  Serial.println(IMU.quaternion.q[1], 15);
+  Serial.print("Qy: ");
+  Serial.println(IMU.quaternion.q[2], 15);
+  Serial.print("Qz: ");
+  Serial.println(IMU.quaternion.q[3], 15);
   
   //roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
   //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
