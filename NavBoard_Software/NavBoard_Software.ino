@@ -5,21 +5,12 @@
 #include "RoveBoard.h"
 #include "RoveComm.h"
 #include "Quaternion.h"
+#include "LSM90S1.h"
 
 #include <Adafruit_GPS.h>
 //#include <SoftwareSerial.h>
-#include "Wire.h"
-#include "inc/hw_i2c.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_types.h"
-#include "inc/hw_gpio.h"
-#include "driverlib/i2c.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/gpio.h"
-#include "driverlib/pin_map.h"
 
-//list of all registers binary addresses;
-#include "IMUreg.h"
+
 
 const uint16_t GPS_FIX_QUALITY_DATA_ID = 1296;
 const uint16_t GPS_LAT_LON_DATA_ID = 1297;
@@ -41,78 +32,6 @@ uint64_t gps_lat_lon = 0;
 Adafruit_GPS GPS(&Serial6);
 //SoftwareSerial mySerial(3, 2);
 
-void gyroReading(float gyro[3])
-{
-  byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
-  byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
-  byte Y_L = I2CReceive(Address_AG, OUT_Y_L_G);
-  byte Y_H = I2CReceive(Address_AG, OUT_Y_H_G);
-  byte Z_L = I2CReceive(Address_AG, OUT_Z_L_G);
-  byte Z_H = I2CReceive(Address_AG, OUT_Z_H_G);
-
-  int16_t X_AXIs = X_H <<8 | X_L;
-  int16_t Y_AXIs = Y_H <<8 | Y_L;
-  int16_t Z_AXIs = Z_H <<8 | Z_L;
-
-
-  float real_X_Axis =0.00875*(X_AXIs-320);
-  float real_Y_Axis =0.00875*(Y_AXIs-17);
-  float real_Z_Axis =0.00875*(Z_AXIs+190);
-  
-  gyro[0] = real_X_Axis;
-  gyro[1] = real_Y_Axis;
-  gyro[2] = real_Z_Axis;
-}
-
-void accelerometerReading(float accel[3])
-{
-  byte X_L_A = I2CReceive(Address_AG, OUT_X_L_XL);//Output acceleration in x-axis as a 16-bit word in two's complement
-  byte X_H_A = I2CReceive(Address_AG, OUT_X_H_XL);
-  byte Y_L_A = I2CReceive(Address_AG, OUT_Y_L_XL);
-  byte Y_H_A = I2CReceive(Address_AG, OUT_Y_H_XL);
-  byte Z_L_A = I2CReceive(Address_AG, OUT_Z_L_XL);
-  byte Z_H_A = I2CReceive(Address_AG, OUT_Z_H_XL);
-
-  
-  int16_t X_AXIS_A = X_H_A <<8 | X_L_A;
-  int16_t Y_AXIS_A = Y_H_A <<8 | Y_L_A;
-  int16_t Z_AXIS_A = Z_H_A <<8 | Z_L_A;
-  
-  float real_X_AXIS_A = X_AXIS_A*0.000061;
-  float real_Y_AXIS_A = Y_AXIS_A*0.000061;
-  float real_Z_AXIS_A = Z_AXIS_A*0.000061;
-  
-
-  accel[0] = real_X_AXIS_A;
-  accel[1] = real_Y_AXIS_A;
-  accel[2] = real_Z_AXIS_A;
-  
-  
-}
-
-void magnetometerReading(float mag[3])
-{
-  byte X_L_M = I2CReceive(Address_M, OUT_X_L_M);//Magnetometer data expressed as two's complement
-  byte X_H_M = I2CReceive(Address_M, OUT_X_H_M);
-  byte Y_L_M = I2CReceive(Address_M, OUT_Y_L_M);
-  byte Y_H_M = I2CReceive(Address_M, OUT_Y_H_M);
-  byte Z_L_M = I2CReceive(Address_M, OUT_Z_L_M);
-  byte Z_H_M = I2CReceive(Address_M, OUT_Z_H_M);
-  
-  int16_t X_AXIS_M = X_H_M <<8 | X_L_M;
-  int16_t Y_AXIS_M = Y_H_M <<8 | Y_L_M;
-  int16_t Z_AXIS_M = Z_H_M <<8 | Z_L_M;
-  
-  float real_X_Axis_M = X_AXIS_M*0.00014;
-  float real_Y_Axis_M = Y_AXIS_M*0.00014;
-  float real_Z_Axis_M = Z_AXIS_M*0.00014;
-  
-  float MAG_DATA[3];
-  mag[0]= real_X_Axis_M;
-  mag[1] = real_Y_Axis_M;
-  mag[2] = real_Z_Axis_M;
-}
-
 void calibrateMagnetometer()
 {
     float magXmin = 32767;
@@ -126,7 +45,7 @@ void calibrateMagnetometer()
     while(micros() - time < 10000000)
     {
         float MAG_DATA[3];
-        magnetometerReading(MAG_DATA);
+        readMag(MAG_DATA);
 
         if(MAG_DATA[0] > magXmax){ magXmax = MAG_DATA[0]; } 
         if(MAG_DATA[1] > magYmax){ magYmax = MAG_DATA[1]; }
@@ -183,11 +102,7 @@ void setup()
   
   //Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
-
-  I2CSend(Address_AG, CTRL_REG4,0B00111000);  //enable gyro axis
-  I2CSend(Address_AG, CTRL_REG5_XL,0B00111000); //enable accelerometer
-  I2CSend(Address_AG, CTRL_REG1_G,0B01100000); //gyro/accel odr and bw
-  I2CSend(Address_M, CTRL_REG3_M,0B00000000); //enable mag continuous
+  IMUbegin();
   //calibrateMagnetometer();
 }//end
 
@@ -277,23 +192,22 @@ void loop()
 
 
   //temperature section
-  byte Temp_L = I2CReceive(Address_AG, OUT_TEMP_L);
-  byte Temp_H = I2CReceive(Address_AG, OUT_TEMP_H);
-
-  int16_t Temp = Temp_H <<8 | Temp_L;
-  float real_Temp = (Temp/16.0)+25;
-  roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(real_Temp), &real_Temp);
+  int16_t temperature;
+  readTemp(temperature);
+  roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
   
   float GYRO_DATA[3];
-  gyroReading(GYRO_DATA);
+  readGyro(GYRO_DATA);
   
   float MAG_DATA[3];
-  magnetometerReading(MAG_DATA);
+  readMag(MAG_DATA);
   
   float ACCEL_DATA[3];
-  accelerometerReading(ACCEL_DATA);
+  readAccel(ACCEL_DATA);
   
-  Serial.print("Updating");
+  Serial.println("");
+  Serial.println("");
+  Serial.println("Updating");
   fusion.updateMadgwick(GYRO_DATA, ACCEL_DATA, MAG_DATA);
   
   
@@ -319,69 +233,4 @@ void loop()
   
 
 }//end loop
-uint32_t I2CReceive(uint8_t SlaveAddr, uint8_t reg)
-{
-    uint32_t i2cBase = I2C0_BASE;
-  //specify that we are writing (a register address) to the
-    //slave device
-    I2CMasterSlaveAddrSet(i2cBase, SlaveAddr, false);
 
-    //specify register to be read on the slave device
-    I2CMasterDataPut(i2cBase, reg);
-
-    //send control byte and register address byte to slave device
-    I2CMasterControl(i2cBase, I2C_MASTER_CMD_BURST_SEND_START);
-
-    //wait for MCU to start transaction
-    while(!I2CMasterBusy(i2cBase));
-
-  //wait for MCU to finish transaction
-    while(I2CMasterBusy(i2cBase));
-
-    //specify that we are going to read from slave device with 3rd argument (read/~write)= true
-    I2CMasterSlaveAddrSet(i2cBase, SlaveAddr, true);
-
-    //send control byte and read from the register we specified earlier
-    I2CMasterControl(i2cBase, I2C_MASTER_CMD_SINGLE_RECEIVE);
-
-  //wait for MCU to start transaction
-    while(!I2CMasterBusy(i2cBase));
-
-    //wait for MCU to finish transaction
-    while(I2CMasterBusy(i2cBase));
-
-    //return data pulled from the specified register, returns uint32_t
-    return I2CMasterDataGet(i2cBase);
-
-}
-
-void I2CSend(uint8_t slave_addr, uint8_t reg, uint8_t data)
-{
-    uint32_t i2cBase = I2C0_BASE;
-
-    // Tell the master module what address it will place on the bus when
-    // communicating with the slave.
-    I2CMasterSlaveAddrSet(i2cBase, slave_addr, false);
-
-    //put data to be sent into FIFO
-    I2CMasterDataPut(i2cBase, reg);
-
-        //Initiate send of data from the MCU
-        I2CMasterControl(i2cBase, I2C_MASTER_CMD_BURST_SEND_START);
-
-  //wait for MCU to start transaction
-    while(!I2CMasterBusy(i2cBase));
-
-        // Wait until MCU is done transferring.
-        while(I2CMasterBusy(i2cBase));
-
-        I2CMasterDataPut(i2cBase, data);
-
-        I2CMasterControl(i2cBase, I2C_MASTER_CMD_BURST_SEND_FINISH);
-
-  //wait for MCU to start transaction
-    while(!I2CMasterBusy(i2cBase));
-
-        // Wait until MCU is done transferring.
-        while(I2CMasterBusy(i2cBase));
-}
