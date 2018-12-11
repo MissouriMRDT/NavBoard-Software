@@ -26,6 +26,7 @@ const uint16_t IMU_TRUE_HEADING_DATA_ID = 1316;//Currently not updated on client
 
 Quaternion fusion;
 
+LSM90S1 IMU;
 
 uint64_t gps_lat_lon = 0;
 
@@ -45,7 +46,7 @@ void calibrateMagnetometer()
     while(micros() - time < 10000000)
     {
         float MAG_DATA[3];
-        readMag(MAG_DATA);
+        IMU.readMag(MAG_DATA);
 
         if(MAG_DATA[0] > magXmax){ magXmax = MAG_DATA[0]; } 
         if(MAG_DATA[1] > magYmax){ magYmax = MAG_DATA[1]; }
@@ -102,7 +103,7 @@ void setup()
   
   //Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
-  IMUbegin();
+  IMU.begin();
   //calibrateMagnetometer();
 }//end
 
@@ -193,17 +194,17 @@ void loop()
 
   //temperature section
   int16_t temperature;
-  readTemp(temperature);
+  IMU.readTemp(temperature);
   roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
   
   float GYRO_DATA[3];
-  readGyro(GYRO_DATA);
+  IMU.readGyro(GYRO_DATA);
   
   float MAG_DATA[3];
-  readMag(MAG_DATA);
+  IMU.readMag(MAG_DATA);
   
   float ACCEL_DATA[3];
-  readAccel(ACCEL_DATA);
+  IMU.readAccel(ACCEL_DATA);
   
   Serial.println("");
   Serial.println("");

@@ -16,7 +16,7 @@
 
 #include "RoveWire.h"
 
-void IMUbegin()
+void LSM90S1::begin()
 {
   I2CSend(Address_AG, CTRL_REG4,0B00111000);  //enable gyro axis
   I2CSend(Address_AG, CTRL_REG5_XL,0B00111000); //enable accelerometer
@@ -24,7 +24,7 @@ void IMUbegin()
   I2CSend(Address_M, CTRL_REG3_M,0B00000000); //enable mag continuous
 }
 
-void readGyro(float gyro[3])
+void LSM90S1::readGyro(float gyro[3])
 {
   byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
   byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
@@ -47,7 +47,7 @@ void readGyro(float gyro[3])
   gyro[2] = real_Z_Axis;
 }
 
-void readAccel(float accel[3])
+void LSM90S1::readAccel(float accel[3])
 {
   byte X_L_A = I2CReceive(Address_AG, OUT_X_L_XL);//Output acceleration in x-axis as a 16-bit word in two's complement
   byte X_H_A = I2CReceive(Address_AG, OUT_X_H_XL);
@@ -71,7 +71,7 @@ void readAccel(float accel[3])
   accel[2] = real_Z_AXIS_A; 
 }
 
-void readMag(float mag[3])
+void LSM90S1::readMag(float mag[3])
 {
   byte X_L_M = I2CReceive(Address_M, OUT_X_L_M);//Magnetometer data expressed as two's complement
   byte X_H_M = I2CReceive(Address_M, OUT_X_H_M);
@@ -94,7 +94,7 @@ void readMag(float mag[3])
   mag[2] = real_Z_Axis_M;
 }
 
-void readTemp(int16_t &temperature)
+void LSM90S1::readTemp(int16_t &temperature)
 {
   byte Temp_L = I2CReceive(Address_AG, OUT_TEMP_L);
   byte Temp_H = I2CReceive(Address_AG, OUT_TEMP_H);

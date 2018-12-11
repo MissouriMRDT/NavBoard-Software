@@ -16,10 +16,14 @@
 //list of all registers binary addresses;
 #include "IMUreg.h"
 
-void IMUbegin();
-void readGyro(float gyro[3]);
-void readAccel(float accel[3]);
-void readMag(float mag[3]);
-void readTemp(int16_t &temperature);
+class LSM90S1
+{
+  public:
+    void begin();
+    void readGyro(float gyro[3]);
+    void readAccel(float accel[3]);
+    void readMag(float mag[3]);
+    void readTemp(int16_t &temperature);
+};
 
 #endif
