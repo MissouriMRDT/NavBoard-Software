@@ -106,6 +106,7 @@ void setup()
   IMU.begin();
   delay(10);
   IMU.calibrateMag(10000);
+  delay(1000);
   IMU.calibrateGyro(10000);
   IMU.calibrateAccel(1000);
   
@@ -208,7 +209,7 @@ void loop()
   Serial.println("Updating");
   IMU.read();
   //IMU.printRaw();
-  IMU.printCal();
+  //IMU.printCal();
   //fusion.MadgwickQuaternionUpdate(IMUData.gyro, IMUData.accel, IMUData.mag);
   
   

@@ -72,9 +72,9 @@ void LSM90S1::readGyro(float gyro[3])
   int16_t Z_AXIs = Z_H <<8 | Z_L;
 
 
-  float real_X_Axis =0.00875*(X_AXIs-320);
-  float real_Y_Axis =0.00875*(Y_AXIs-17);
-  float real_Z_Axis =0.00875*(Z_AXIs+190);
+  float real_X_Axis =X_AXIs;//0.00875*(X_AXIs-320);
+  float real_Y_Axis =Y_AXIs;//0.00875*(Y_AXIs-17);
+  float real_Z_Axis =Z_AXIs;//0.00875*(Z_AXIs+190);
   
   gyro[0] = real_X_Axis;
   gyro[1] = real_Y_Axis;
@@ -95,9 +95,9 @@ void LSM90S1::readAccel(float accel[3])
   int16_t Y_AXIS_A = Y_H_A <<8 | Y_L_A;
   int16_t Z_AXIS_A = Z_H_A <<8 | Z_L_A;
   
-  float real_X_AXIS_A = X_AXIS_A*0.000061;
-  float real_Y_AXIS_A = Y_AXIS_A*0.000061;
-  float real_Z_AXIS_A = Z_AXIS_A*0.000061;
+  float real_X_AXIS_A = X_AXIS_A;//*0.000061;
+  float real_Y_AXIS_A = Y_AXIS_A;//*0.000061;
+  float real_Z_AXIS_A = Z_AXIS_A;//*0.000061;
   
 
   accel[0] = real_X_AXIS_A;
@@ -118,9 +118,9 @@ void LSM90S1::readMag(float mag[3])
   int16_t Y_AXIS_M = Y_H_M <<8 | Y_L_M;
   int16_t Z_AXIS_M = Z_H_M <<8 | Z_L_M;
   
-  float real_X_Axis_M = X_AXIS_M*0.00014;
-  float real_Y_Axis_M = Y_AXIS_M*0.00014;
-  float real_Z_Axis_M = Z_AXIS_M*0.00014;
+  float real_X_Axis_M = X_AXIS_M;//*0.00014;
+  float real_Y_Axis_M = Y_AXIS_M;//*0.00014;
+  float real_Z_Axis_M = Z_AXIS_M;//*0.00014;
   
   float MAG_DATA[3];
   mag[0]= real_X_Axis_M;
@@ -278,7 +278,8 @@ void LSM90S1::calibrateMag(int ms)
       if(mag_min[i] >= mag_temp[i]) mag_min[i] = mag_temp[i];
       if(mag_max[i] <= mag_temp[i]) mag_max[i] = mag_temp[i]; 
 	}
-	//Serial.println(gyro_temp[0]);
+	Serial.println(mag_min[0]);
+	Serial.println(mag_max[0]);
 	samples++;
 	Serial.print((millis()-startTime)*100/ms);
 	Serial.println("%");
@@ -298,6 +299,15 @@ void LSM90S1::calibrateMag(int ms)
 	Serial.print(", ");
 	Serial.print(mag_bias[i], 16);
   }
+  
+  //write biases to accelerometermagnetometer offset registers as counts);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_X_REG_L_M, (int16_t) mag_bias[0]  & 0xFF);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_X_REG_H_M, ((int16_t)mag_bias[0] >> 8) & 0xFF);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Y_REG_L_M, (int16_t) mag_bias[1] & 0xFF);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Y_REG_H_M, ((int16_t)mag_bias[1] >> 8) & 0xFF);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Z_REG_L_M, (int16_t) mag_bias[2] & 0xFF);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Z_REG_H_M, ((int16_t)mag_bias[2] >> 8) & 0xFF);
+  
 }
 void LSM90S1::printRaw()
 {

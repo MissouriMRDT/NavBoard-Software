@@ -4,7 +4,7 @@
 #include <Math.h>
 #include <Energia.h>
 
-const int GYRO_ERROR_DEG = 3.14159265359 * (400.0f / 180.0f);
+const int GYRO_ERROR_DEG = 3.14159265359 * (40.0f / 180.0f);
 
 
 class Quaternion
