@@ -16,6 +16,14 @@
 //list of all registers binary addresses;
 #include "IMUreg.h"
 
+struct LSM90S1Data
+{
+  float gyro[3];
+  float accel[3];
+  float mag[3];
+  int16_t temperature;
+};
+
 class LSM90S1
 {
   public:
@@ -24,6 +32,10 @@ class LSM90S1
     void readAccel(float accel[3]);
     void readMag(float mag[3]);
     void readTemp(int16_t &temperature);
+	
+	LSM90S1Data read();
+	
+	void print(LSM90S1Data Data);
 };
 
 #endif

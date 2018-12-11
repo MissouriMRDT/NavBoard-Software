@@ -12,9 +12,9 @@ class Quaternion
       int   pitchAdjust = 90;
   
       float magbias[3];
-      float q[4];
+      float q[4];              //Quaternion of sensor frame relative to auxiliary frame
       float GyroMeasError = 0;
-      float beta = 0;
+      float beta = 0;          //Algorithm gain
       float headingOffset = 0;
       float deltat = 0;
       float magmax[3];
@@ -32,6 +32,9 @@ class Quaternion
       float getRoll();
       float getHeading();
       float getTrueHeading();
+	  
+	  void MahonyAHRSupdate(float gyroscopeXYZ[], float accelerometerXYZ[], float magnetometerXYZ[]);
+	  void MadgwickQuaternionUpdate(float gyroscopeXYZ[], float accelerometerXYZ[], float magnetometerXYZ[]);
 
 
 };

@@ -27,6 +27,7 @@ const uint16_t IMU_TRUE_HEADING_DATA_ID = 1316;//Currently not updated on client
 Quaternion fusion;
 
 LSM90S1 IMU;
+LSM90S1Data IMUData;
 
 uint64_t gps_lat_lon = 0;
 
@@ -196,20 +197,16 @@ void loop()
   int16_t temperature;
   IMU.readTemp(temperature);
   roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
-  
-  float GYRO_DATA[3];
-  IMU.readGyro(GYRO_DATA);
-  
-  float MAG_DATA[3];
-  IMU.readMag(MAG_DATA);
-  
-  float ACCEL_DATA[3];
-  IMU.readAccel(ACCEL_DATA);
-  
+
+  IMUData=IMU.read();
+
+  //IMU.print(IMUData);
+    
   Serial.println("");
   Serial.println("");
   Serial.println("Updating");
-  fusion.updateMadgwick(GYRO_DATA, ACCEL_DATA, MAG_DATA);
+  fusion.MadgwickQuaternionUpdate(IMUData.gyro, IMUData.accel, IMUData.mag);
+  //fusion.updateMadgwick(IMUData.gyro, IMUData.accel, IMUData.mag);
   
   
   Serial.print("Pitch ");

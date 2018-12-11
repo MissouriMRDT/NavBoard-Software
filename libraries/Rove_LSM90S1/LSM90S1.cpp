@@ -103,3 +103,39 @@ void LSM90S1::readTemp(int16_t &temperature)
   temperature = (Temp/16.0)+25;
 }
 
+LSM90S1Data LSM90S1::read()
+{
+  LSM90S1Data IMUData;
+  
+  readGyro (IMUData.gyro);
+  readMag  (IMUData.accel);
+  readAccel(IMUData.mag);
+  //readTemp (IMUData.temperature);
+  
+  return IMUData;
+}
+
+void LSM90S1::print(LSM90S1Data Data)
+{
+  Serial.print("\n---IMU Data---\n             ----X----           ----Y----          ----Z----");
+  Serial.print("\nGyro:");
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(Data.gyro[i], 16);
+  }
+  
+  Serial.print("\nAcce:");
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(Data.accel[i], 16);
+  }
+  
+  Serial.print("\nMagn:");
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(Data.mag[i], 16);
+  }
+}
