@@ -228,13 +228,13 @@ void Quaternion::updateMahony(float ax, float ay, float az, float gx, float gy, 
 
 void Quaternion::updatePYR()
 {
-  heading   = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);   
-  roll = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
-  pitch  = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
+  pitch = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
+  roll  = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
+  heading   = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]); 
+  pitch *= 180.0f / PI_VAL;
   roll *= 180.0f / PI_VAL;
   heading   *= 180.0f / PI_VAL; 
   heading   -= DECLINATION; // Declination (update to include competition value
-  pitch *= 180.0f / PI_VAL;
   //pitch += pitchAdjust;
   trueHeading = fmod((((heading - 360) * -1) - 76), (float)360); 
 }

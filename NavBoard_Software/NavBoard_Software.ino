@@ -106,7 +106,7 @@ void setup()
   IMU.begin();
   delay(10);
   IMU.calibrateMag(10000);
-  delay(1000);
+  delay(2000);
   IMU.calibrateGyro(10000);
   IMU.calibrateAccel(1000);
   

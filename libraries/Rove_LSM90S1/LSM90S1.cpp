@@ -278,8 +278,6 @@ void LSM90S1::calibrateMag(int ms)
       if(mag_min[i] >= mag_temp[i]) mag_min[i] = mag_temp[i];
       if(mag_max[i] <= mag_temp[i]) mag_max[i] = mag_temp[i]; 
 	}
-	Serial.println(mag_min[0]);
-	Serial.println(mag_max[0]);
 	samples++;
 	Serial.print((millis()-startTime)*100/ms);
 	Serial.println("%");
