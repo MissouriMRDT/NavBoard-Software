@@ -105,7 +105,7 @@ void setup()
   //GPS.sendCommand(PGCMD_ANTENNA);
   IMU.begin();
   delay(10);
-  IMU.calibrateMag(10000);
+  IMU.calibrateMag(30000);
   delay(2000);
   IMU.calibrateGyro(10000);
   IMU.calibrateAccel(1000);
@@ -200,7 +200,7 @@ void loop()
   //temperature section
   int16_t temperature;
   IMU.readTemp(temperature);
-  roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
+  //roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
 
   //IMU.print(IMUData);
     
@@ -233,7 +233,11 @@ void loop()
   Serial.println(IMU.quaternion.q[2], 15);
   Serial.print("Qz: ");
   Serial.println(IMU.quaternion.q[3], 15);
-  
+
+ float heading = IMU.getHeading();
+ heading += 180;
+ 
+  roveComm_SendMsg(IMU_TRUE_HEADING_DATA_ID, sizeof(heading), &heading);
   //roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
   //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
   //roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
