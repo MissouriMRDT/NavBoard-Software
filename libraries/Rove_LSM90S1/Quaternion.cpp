@@ -236,7 +236,7 @@ void Quaternion::updatePYR()
   heading   *= 180.0f / PI_VAL; 
   heading   -= DECLINATION; // Declination (update to include competition value
   //pitch += pitchAdjust;
-  trueHeading = fmod((((heading - 360) * -1) - 76), (float)360); 
+  trueHeading = fmod(heading, (float)360); 
 }
 
 float Quaternion::getHeading()

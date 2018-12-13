@@ -235,10 +235,10 @@ void loop()
   Serial.println(IMU.quaternion.q[3], 15);
 
  float heading = IMU.getHeading();
- heading += 180;
+ float trueHeading = IMU.getTrueHeading();
  
   roveComm_SendMsg(IMU_TRUE_HEADING_DATA_ID, sizeof(heading), &heading);
-  //roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
+  roveComm_SendMsg(IMU_PITCH_DATA_ID, sizeof(trueHeading), &trueHeading);
   //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
   //roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
 
