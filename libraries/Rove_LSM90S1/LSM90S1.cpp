@@ -280,7 +280,12 @@ void LSM90S1::calibrateMag(int ms)
 	}
 	samples++;
 	Serial.print((millis()-startTime)*100/ms);
-	Serial.println("%");
+	Serial.print("%,");
+	Serial.print(mag_temp[0]);
+	Serial.print(",");
+	Serial.print(mag_temp[1]);
+	Serial.print(",");
+	Serial.println(mag_temp[2]);
   }  
   
   mag_bias[0]  = (mag_max[0] + mag_min[0])/2;  // get average x mag bias in counts
