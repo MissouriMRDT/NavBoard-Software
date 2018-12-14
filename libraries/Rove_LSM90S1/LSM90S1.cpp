@@ -123,7 +123,7 @@ void LSM90S1::readMag(float mag[3])
   float real_Z_Axis_M = Z_AXIS_M;//*0.00014;
   
   float MAG_DATA[3];
-  mag[0]= real_X_Axis_M;
+  mag[0] = real_X_Axis_M;
   mag[1] = real_Y_Axis_M;
   mag[2] = real_Z_Axis_M;
 }
@@ -214,7 +214,7 @@ void LSM90S1::calibrateGyro(int ms)
   for(int i=0; i<3; i++)
   {
 	Serial.print(", ");
-	Serial.print(gyro_bias[i], 16);
+	Serial.print(gBias[i], 16);
   }
 }
 
@@ -245,9 +245,31 @@ void LSM90S1::calibrateAccel(int ms)
   accel_bias[1] /= samples; 
   accel_bias[2] /= samples; 
   
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(accel_bias[i], 16);
+  }
+  
+  if(accel_bias[2] > 0L)
+  {
+	accel_bias[2] -= (int32_t) (1.0/aRes);
+  }  // Remove gravity from the z-axis accelerometer bias calculation
+  else 
+  {
+	accel_bias[2] += (int32_t) (1.0/aRes);
+  }
+  
   aBias[0] = accel_bias[0]*aRes;  // Properly scale the data to get deg/s
   aBias[1] = accel_bias[1]*aRes;
   aBias[2] = accel_bias[2]*aRes;
+  
+  Serial.print("\naBias:");
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(aBias[i], 16);
+  }
   
   Serial.print("\naBias:");
   for(int i=0; i<3; i++)
@@ -261,6 +283,9 @@ void LSM90S1::calibrateMag(int ms)
 {
   Serial.println("\n---Calibrating Mag");
   delay(100);
+  
+  //write 0 biases to accelerometermagnetometer offset registers as counts;
+  //updateMag();
   
   float mag_min[3] = {0, 0, 0};
   float mag_max[3] = {0, 0, 0};
@@ -300,18 +325,44 @@ void LSM90S1::calibrateMag(int ms)
   for(int i=0; i<3; i++)
   {
 	Serial.print(", ");
-	Serial.print(mag_bias[i], 16);
+	Serial.print(mBias[i], 16);
+  }
+  
+  Serial.print("\nmMin:");
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(mag_min[i], 16);
+  }
+  
+  Serial.print("\nmMax:");
+  for(int i=0; i<3; i++)
+  {
+	Serial.print(", ");
+	Serial.print(mag_max[i], 16);
   }
   
   //write biases to accelerometermagnetometer offset registers as counts);
-  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_X_REG_L_M, (int16_t) mag_bias[0]  & 0xFF);
-  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_X_REG_H_M, ((int16_t)mag_bias[0] >> 8) & 0xFF);
-  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Y_REG_L_M, (int16_t) mag_bias[1] & 0xFF);
-  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Y_REG_H_M, ((int16_t)mag_bias[1] >> 8) & 0xFF);
-  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Z_REG_L_M, (int16_t) mag_bias[2] & 0xFF);
-  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Z_REG_H_M, ((int16_t)mag_bias[2] >> 8) & 0xFF);
-  
+  /*
+  updateMag((int16_t) mag_bias[0]       & 0xFF, 
+            (int16_t) mag_bias[0] >> 8) & 0xFF,
+		    (int16_t) mag_bias[1]       & 0xFF, 
+            (int16_t) mag_bias[1] >> 8) & 0xFF,
+		    (int16_t) mag_bias[2]       & 0xFF, 
+            (int16_t) mag_bias[2] >> 8) & 0xFF);
+  */
 }
+
+void updateMag(int16_t xl=0, int16_t xh=0, int16_t yl=0, int16_t yh=0, int16_t zl=0, int16_t zh=0)
+{
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_X_REG_L_M, xl);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_X_REG_H_M, xh);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Y_REG_L_M, yl);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Y_REG_H_M, yh);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Z_REG_L_M, zl);
+  I2CSend(LSM9DS1M_ADDRESS, LSM9DS1M_OFFSET_Z_REG_H_M, zh);
+}
+
 void LSM90S1::printRaw()
 {
   Serial.print("\n---Raw IMU Data---\n             ----X----           ----Y----          ----Z----");

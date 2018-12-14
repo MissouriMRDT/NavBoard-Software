@@ -6,6 +6,7 @@
 #include "RoveComm.h"
 #include "Quaternion.h"
 #include "LSM90S1.h"
+#include "roveAttachTimerInterrupt.h"
 
 #include <Adafruit_GPS.h>
 //#include <SoftwareSerial.h>
@@ -33,50 +34,8 @@ uint64_t gps_lat_lon = 0;
 Adafruit_GPS GPS(&Serial6);
 //SoftwareSerial mySerial(3, 2);
 
-void calibrateMagnetometer()
-{
-    float magXmin = 32767;
-    float magYmin = 32767;
-    float magZmin = 32767;
-    float magXmax = -32767;
-    float magYmax = -32767;
-    float magZmax = -32767;
-    float time = micros();
-    //hackish way of running this loop for approx. 10 seconds
-    while(micros() - time < 10000000)
-    {
-        float MAG_DATA[3];
-        IMU.readMag(MAG_DATA);
-
-        if(MAG_DATA[0] > magXmax){ magXmax = MAG_DATA[0]; } 
-        if(MAG_DATA[1] > magYmax){ magYmax = MAG_DATA[1]; }
-        if(MAG_DATA[2] > magZmax){ magZmax = MAG_DATA[2]; }
-
-        if(MAG_DATA[0] < magXmin){ magXmin = MAG_DATA[0]; }
-        if(MAG_DATA[1] < magYmin){ magYmin = MAG_DATA[1]; }
-        if(MAG_DATA[2] < magZmin){ magZmin = MAG_DATA[2]; }
-     }
-     //outputs to serial monitor, will then need to be manually implemented in Quaternion.cpp
-     Serial.print("MagMinX ");
-     Serial.print(magXmin);
-     Serial.print(  + "\n");
-     Serial.print("MagMinY ");
-     Serial.print(magYmin);
-     Serial.print(  + "\n");
-     Serial.print("MagMinZ ");
-     Serial.print(magZmin);
-     Serial.print(  + "\n");
-     Serial.print("MagMaxX ");
-     Serial.print(magXmax);
-     Serial.print(  + "\n");
-     Serial.print("MagMaxY ");
-     Serial.print(magYmax);
-     Serial.print(  + "\n");
-     Serial.print("MagMaxZ ");
-     Serial.print(magZmax);
-     Serial.print(  + "\n");
-
-}
+void updateIMU();
+int count = 0;
 
 void setup()
 {
@@ -105,10 +64,12 @@ void setup()
   //GPS.sendCommand(PGCMD_ANTENNA);
   IMU.begin();
   delay(10);
-  IMU.calibrateMag(30000);
+  //IMU.calibrateMag(30000);
   delay(2000);
   IMU.calibrateGyro(10000);
   IMU.calibrateAccel(1000);
+
+  roveAttachTimerInterrupt(updateIMU,  T0_A, 100, 1);
   
 }//end
 
@@ -203,11 +164,13 @@ void loop()
   //roveComm_SendMsg(IMU_TEMP_DATA_ID, sizeof(temperature), &temperature);
 
   //IMU.print(IMUData);
-    
+
   Serial.println("");
   Serial.println("");
   Serial.println("Updating");
-  IMU.read();
+  Serial.print("Counts: ");
+  Serial.println(count);
+  count = 0;
   //IMU.printRaw();
   //IMU.printCal();
   //fusion.MadgwickQuaternionUpdate(IMUData.gyro, IMUData.accel, IMUData.mag);
@@ -234,11 +197,14 @@ void loop()
   Serial.print("Qz: ");
   Serial.println(IMU.quaternion.q[3], 15);
 
+  IMU.printRaw();
+  IMU.printCal();
+
  float heading = IMU.getHeading();
- float trueHeading = IMU.getTrueHeading();
+ heading += 180;
  
   roveComm_SendMsg(IMU_TRUE_HEADING_DATA_ID, sizeof(heading), &heading);
-  roveComm_SendMsg(IMU_PITCH_DATA_ID, sizeof(trueHeading), &trueHeading);
+  //roveComm_SendMsg(IMU_GYRO_DATA_ID, sizeof(GYRO_DATA), GYRO_DATA);
   //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
   //roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
 
@@ -247,4 +213,10 @@ void loop()
   
 
 }//end loop
+
+void updateIMU()
+{
+  IMU.read();
+  count++;
+}
 

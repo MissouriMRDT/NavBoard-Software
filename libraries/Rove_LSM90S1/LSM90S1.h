@@ -37,7 +37,7 @@ class LSM90S1
 	
 	float gBias[3]={308.2666320800781250, 213.8016662597656250, -627.1350708007812500};
     float aBias[3]={-399.9445800781250000, -534.8186645507812500, 16720.2167968750000000};
-    float mBias[3]={2013.5000000000000000, 1240.0000000000000000, 2292.0000000000000000};
+    float mBias[3]={1552.0000000000000000, 269.0000000000000000, 1396.0000000000000000};
 	
 	// Set initial input parameters
     enum Ascale {  // set of allowable accel full scale settings
@@ -134,6 +134,7 @@ class LSM90S1
     float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
 	
 	void initLSM9DS1();
+	void updateMag(int16_t xl=0, int16_t xh=0, int16_t yl=0, int16_t yh=0, int16_t zl=0, int16_t zh=0);
   
     
   public:
