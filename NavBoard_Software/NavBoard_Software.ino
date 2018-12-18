@@ -201,6 +201,7 @@ void loop()
   IMU.printCal();
 
  float heading = IMU.getHeading();
+ heading = -heading;
  heading += 180;
  
   roveComm_SendMsg(IMU_TRUE_HEADING_DATA_ID, sizeof(heading), &heading);
