@@ -28,6 +28,23 @@ class LSM90S1
     float accelCal[3];
     float magCal[3];
 	int16_t temperature;
+	float heading = 0;
+	float xT = 0;
+	float yT = 0;
+	float zT = 0;
+	float magTemp[3] = {0,0,0};
+	float coefficient = 0.3;
+	float oldCoeff = 1 - coefficient;
+	float x_Adj = 0;
+	float y_Adj = 0;
+	float xBias[2];
+	float yBias[2];
+	float zBias[2];
+	float mag_scale[3];
+	float dest1[3];
+	float dest2[3];
+	float bounds[2] = {-1.0, 1.0};
+	
 	
 	
 	
@@ -147,6 +164,7 @@ class LSM90S1
     void readTemp(int16_t &temperature);
 	void read();
 	void updateMadgwick();
+	void updateHeading();
 	
 	float getPitch();
     float getRoll();
@@ -163,6 +181,10 @@ class LSM90S1
 	void getAres();
 	void getMres();
 	void getGres();
+	
+	void updateAxes();
+	float interp(float axis, float lowBias, float highBias, float lowBound, float highBound);
+	float filter(float axis, float temp);
 };
 
 #endif

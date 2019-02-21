@@ -9,6 +9,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
+#include "math.h"
 #include "Energia.h"
 
 //list of all registers binary addresses;
@@ -60,7 +61,7 @@ void LSM90S1::begin()//ToDo: set resolutions
 
 void LSM90S1::readGyro(float gyro[3])
 {
-  byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch
+  byte X_L = I2CReceive(Address_AG, OUT_X_L_G);//gyroscope pitch, two's complement
   byte X_H = I2CReceive(Address_AG, OUT_X_H_G);
   byte Y_L = I2CReceive(Address_AG, OUT_Y_L_G);
   byte Y_H = I2CReceive(Address_AG, OUT_Y_H_G);
@@ -70,6 +71,7 @@ void LSM90S1::readGyro(float gyro[3])
   int16_t X_AXIs = X_H <<8 | X_L;
   int16_t Y_AXIs = Y_H <<8 | Y_L;
   int16_t Z_AXIs = Z_H <<8 | Z_L;
+
 
 
   float real_X_Axis =X_AXIs;//0.00875*(X_AXIs-320);
@@ -95,6 +97,7 @@ void LSM90S1::readAccel(float accel[3])
   int16_t Y_AXIS_A = Y_H_A <<8 | Y_L_A;
   int16_t Z_AXIS_A = Z_H_A <<8 | Z_L_A;
   
+
   float real_X_AXIS_A = X_AXIS_A;//*0.000061;
   float real_Y_AXIS_A = Y_AXIS_A;//*0.000061;
   float real_Z_AXIS_A = Z_AXIS_A;//*0.000061;
@@ -117,6 +120,7 @@ void LSM90S1::readMag(float mag[3])
   int16_t X_AXIS_M = X_H_M <<8 | X_L_M;
   int16_t Y_AXIS_M = Y_H_M <<8 | Y_L_M;
   int16_t Z_AXIS_M = Z_H_M <<8 | Z_L_M;
+
   
   float real_X_Axis_M = X_AXIS_M;//*0.00014;
   float real_Y_Axis_M = Y_AXIS_M;//*0.00014;
@@ -140,16 +144,20 @@ void LSM90S1::readTemp(int16_t &temperature)
 void LSM90S1::read()
 {  
   readGyro (gyro);
-  readMag  (accel);
-  readAccel(mag);
+  readMag  (mag);
+  readAccel(accel);
   
   for(int i = 0; i<3; i++)
   {
     gyroCal [i] = gyro [i]*gRes-gBias[i];
     accelCal[i] = accel[i]*aRes-aBias[i];
-    magCal  [i] = mag  [i]*mRes;//-mBias[i];
+    magCal  [i] = (mag  [i]*mRes-mBias[i])*mag_scale[i];
   }
+  magTemp[0] = magCal[0];
+  magTemp[1] = magCal[1];
+  magTemp[2] = magCal[2];
   //readTemp (IMUData.temperature);
+  updateAxes();
   updateMadgwick();
 
 }
@@ -161,7 +169,8 @@ void LSM90S1::updateMadgwick()
 
 float LSM90S1::getHeading()
 {
-    return quaternion.heading;
+    //return quaternion.heading;
+	return heading;
 }
 
 float LSM90S1::getPitch()
@@ -316,10 +325,25 @@ void LSM90S1::calibrateMag(int ms)
   mag_bias[0]  = (mag_max[0] + mag_min[0])/2;  // get average x mag bias in counts
   mag_bias[1]  = (mag_max[1] + mag_min[1])/2;  // get average y mag bias in counts
   mag_bias[2]  = (mag_max[2] + mag_min[2])/2;  // get average z mag bias in counts
-  
+  //https://github.com/kriswiner/MPU6050/wiki/Simple-and-Effective-Magnetometer-Calibration
+  //using the article above we needed to not only perform the main calibration above which shifts the middle of the ranges to the origin but we needed another calibration to scale the axes to be equal.
+  xBias[0] = mag_min[0]*mRes;
+  xBias[1] = mag_max[0]*mRes;
+  yBias[0] = mag_min[1]*mRes;
+  yBias[1] = mag_max[1]*mRes;
+  zBias[0] = mag_min[2]*mRes;
+  zBias[1] = mag_max[2]*mRes;
   mBias[0] = mag_bias[0]*mRes;  // Properly scale the data to get deg/s
   mBias[1] = mag_bias[1]*mRes;
   mBias[2] = mag_bias[2]*mRes;
+  mag_scale[0] = (mag_max[0] - mag_min[0])/2;
+  mag_scale[1] = (mag_max[1] - mag_min[1])/2;
+  mag_scale[2] = (mag_max[2] - mag_min[2])/2;
+  float avg_rad = mag_scale[0] + mag_scale[1] + mag_scale[2];
+  avg_rad = avg_rad / 3.0;
+  mag_scale[0] = avg_rad/mag_scale[0];
+  mag_scale[1] = avg_rad/mag_scale[1];
+  mag_scale[2] = avg_rad/mag_scale[2];
   
   Serial.print("\nmBias:");
   for(int i=0; i<3; i++)
@@ -341,6 +365,12 @@ void LSM90S1::calibrateMag(int ms)
 	Serial.print(", ");
 	Serial.print(mag_max[i], 16);
   }
+  delay(2000);
+  //DUMBSHIT//
+  //trying to manually enter offsets as our calibration seems off//
+  //mBias[0] += 0.15;
+  //mBias[1] += 0.3;
+  //mBias[2] += 0.12;
   
   //write biases to accelerometermagnetometer offset registers as counts);
   /*
@@ -391,7 +421,7 @@ void LSM90S1::printRaw()
 
 void LSM90S1::printCal()
 {
-  Serial.print("\n---Cal IMU Data---\n             ----X----           ----Y----          ----Z----");
+  /*Serial.print("\n---Cal IMU Data---\n             ----X----           ----Y----          ----Z----");
   Serial.print("\nGyro:");
   for(int i=0; i<3; i++)
   {
@@ -412,7 +442,57 @@ void LSM90S1::printCal()
 	Serial.print(", ");
 	Serial.print(magCal[i], 16);
   }
-  Serial.println("");
+  Serial.println("");*/
+  /*for (int i =0; i < 3; i++) 
+  {
+	  Serial.print(gyro[i],16);
+	  Serial.print(",");
+  }
+  for (int i =0; i < 3; i++) 
+  {
+	  Serial.print(gyroCal[i],16);
+	  Serial.print(",");
+  }
+  for (int i =0; i < 3; i++) 
+  {
+	  Serial.print(accel[i],16);
+	  Serial.print(",");
+  }
+  for (int i =0; i < 3; i++) 
+  {
+	  Serial.print(accelCal[i],16);
+	  Serial.print(",");
+  }
+  for (int i =0; i < 3; i++) 
+  {
+	  Serial.print(mag[i],16);
+	  Serial.print(",");
+  }
+  for (int i =0; i < 3; i++) 
+  {
+	  Serial.print(magCal[i],16);
+	  Serial.print(",");
+  }
+  Serial.print(getPitch());
+	  Serial.print(",");
+  Serial.print(getRoll());
+	  Serial.print(",");
+  Serial.print(getHeading());
+	  Serial.print(",");
+  Serial.print(quaternion.q[0], 15);
+	  Serial.print(",");
+  Serial.print(quaternion.q[1], 15);
+	  Serial.print(",");
+  Serial.print(quaternion.q[2], 15);
+	  Serial.print(",");
+  Serial.print(quaternion.q[3], 15);
+	  Serial.print(",\n");*/
+  Serial.print(heading);
+  Serial.print(",");
+  Serial.print(magTemp[0]);
+  Serial.print(",");
+  Serial.println(magTemp[1]);
+  
 }
 
 void LSM90S1::getMres() 
@@ -473,4 +553,33 @@ void LSM90S1::getAres()
           aRes = 8.0/32768.0;
           break;
   }
+}
+
+//everything after here is for the hacky compass
+
+void LSM90S1::updateAxes()
+{
+	/*xT = filter(xT,magTemp[0]);
+	yT = filter(yT,magTemp[1]);
+	zT = filter(zT,magTemp[2]);
+	
+	x_Adj = interp(xT, xBias[0], xBias[1], bounds[0], bounds[1]);
+	y_Adj = interp(yT, yBias[0], yBias[1], bounds[0], bounds[1]);
+	
+	heading = atan2(y_Adj, x_Adj) * 180/3.14; //in degrees from function.*/
+	heading = atan2(magTemp[1], magTemp[0]);
+}
+
+float LSM90S1::interp(float axis, float lowBias, float highBias, float lowBound, float highBound)
+{
+	float inspan = lowBias - highBias;
+	float outspan = lowBound - highBound;
+	float scaled = (axis - lowBias)/inspan;
+	return (scaled * outspan)/lowBound;
+}
+
+float LSM90S1::filter(float axis, float temp)
+{
+	axis = (axis * oldCoeff) + temp * coefficient;
+	return axis;
 }
