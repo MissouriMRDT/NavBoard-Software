@@ -1,0 +1,9 @@
+TODO: Write instructions for calibration.
+
+Calibration Process for Magnetometer: text
+
+Calibration process for Accelerometer: text
+
+Calibration process for Gyro: text
+
+Data processing to determine calibration numbers: excel things after my account is setup.
