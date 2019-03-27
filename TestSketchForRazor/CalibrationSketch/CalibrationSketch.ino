@@ -18,11 +18,11 @@ void setup() {
 }
 
 void loop() {
-  calibrateMag(60000); //calibrate the magnetometer for 60s
+  //calibrateMag(60000); //calibrate the magnetometer for 60s
   SerialPort.print("\n\n\n");
   calibrateAccel(10000); //calibrate the accelerometer for 10s
   SerialPort.print("\n\n\n");
-  calibrateGyro(10000); //calibrate the Gyro for 10s
+  //calibrateGyro(10000); //calibrate the Gyro for 10s
 }
 
 void calibrateMag(uint32_t calibTime)
