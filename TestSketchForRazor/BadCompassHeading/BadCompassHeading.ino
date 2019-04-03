@@ -1,4 +1,5 @@
 #include <SparkFunMPU9250-DMP.h>
+#include <Time.h>
 
 #define SerialPort Serial1
 MPU9250_DMP imu;
@@ -45,7 +46,8 @@ void loop() {
   imu.update(UPDATE_ACCEL | UPDATE_GYRO | UPDATE_COMPASS);
   printIMUData();
   //SerialPort.print("testytest");
-  float temp = (imu.heading + 3*(3.14)) * 100 + 480;
+  float temp = (imu.heading + 3*(3.14)) * 100 + 808;
+  //temp = temp*180/3.1415;
   int output = (int)temp;
   output = output % 628;
   SerialPort.println(output);
@@ -66,7 +68,7 @@ void printIMUData()
 {
   imu.accelX = imu.calcAccel(imu.ax);
   imu.accelY = imu.calcAccel(imu.ay);
-  imu.accelZ = -imu.calcAccel(imu.az);
+  imu.accelZ = -(imu.az + 1040)/imu._aSense;
   imu.magX = imu.alpha*((imu.mx/6.665)-imu.mag_Bias[0])*imu.mag_Scale[0] + (1.0 - imu.alpha)*imu.magX;
   imu.magY = imu.alpha*((imu.my/6.665)-imu.mag_Bias[1])*imu.mag_Scale[1] + (1.0 - imu.alpha)*imu.magY;
   imu.magZ = imu.alpha*((imu.mz/6.665)-imu.mag_Bias[2])*imu.mag_Scale[2] + (1.0 - imu.alpha)*imu.magZ;

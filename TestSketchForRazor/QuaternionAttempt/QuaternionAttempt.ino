@@ -1,6 +1,9 @@
 #include <SparkFunMPU9250-DMP.h>
-
+#include "Quaternion.h"
 #define SerialPort SerialUSB
+
+
+Quaternion quat;
 MPU9250_DMP imu;
 float ax = 0;
 float ay = 0;
@@ -19,20 +22,14 @@ void setup() {
   aSense = imu._aSense;
 	//someone experimentally found that (ay, az, ax, gy, gz, gx, mx, -mz, my) is best for an MPU9250.
 	//*bleepy bleep*, 16.5k or so on both x/y axes, but about 15680 -> - 17760 on Z-axis
-	//so add 1040 to all z-axis accelerometer readings before divinding by the sensitivity.
+	//so add 1040 to all z-axis accelerometer readings before dividing by the sensitivity.
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 	imu.update(UPDATE_ACCEL | UPDATE_GYRO | UPDATE_COMPASS);
-    SerialPort.print("accel,");
-    aSense = (float)imu._aSense;
 	ax = imu.ax/aSense;
 	ay = imu.ay/aSense;
 	az = (imu.az + 1040)/aSense;
-    SerialPort.print(ax);
-    SerialPort.print(",");
-    SerialPort.print(ay);
-    SerialPort.print(",");
-    SerialPort.println(az);
 }
+
