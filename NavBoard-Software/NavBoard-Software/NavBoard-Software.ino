@@ -238,7 +238,7 @@ void readIMU()
         imuData[i] = Serial2.read();
       }
     }
-    
+    //tempHeading = Serial.parseInt();
   } //end while
   for (int i =0; i < 3; i++)
   {

@@ -1,9 +1,12 @@
 #include <SparkFunMPU9250-DMP.h>
 #include <Time.h>
 
-#define SerialPort Serial1
+#define SerialPort SerialUSB
 MPU9250_DMP imu;
-
+float hardIron[3] = {100.5, 204, -231.5};
+float softIron[3] = {1.005624, 1.146154, 0.882527};
+float accelCalib[3] = {-0.01379, 0.0067, -0.0624};
+float gyroCalib[3] = {0.071614, 0.624156, -0.75205};
 float Xh = 0;
 float Yh = 0;
 byte headingB[2] = {0,0};
@@ -46,13 +49,21 @@ void loop() {
   imu.update(UPDATE_ACCEL | UPDATE_GYRO | UPDATE_COMPASS);
   printIMUData();
   //SerialPort.print("testytest");
-  float temp = (imu.heading + 3*(3.14)) * 100 + 808;
+  float temp = imu.heading * 100;
   //temp = temp*180/3.1415;
   int output = (int)temp;
   output = output % 628;
-  SerialPort.println(output);
-  SerialPort.println();
-  SerialPort.println();
+  SerialPort.print(output);
+  SerialPort.print(",");
+  temp = imu.roll * 100;
+  output = (int)(temp);
+  SerialPort.print(temp);
+  SerialPort.print(",");
+  temp = imu.pitch * 100;
+  output = (int)(temp);
+  SerialPort.print(temp);
+  SerialPort.print(",");
+  SerialPort.println(atan2(imu.magX, imu.magY)*100);
   /*SerialPort.print(output);
   temp = imu.pitch *180/3.14;
   output = (int8_t)temp;
@@ -60,25 +71,30 @@ void loop() {
   temp = imu.roll *180/3.14;
   output = (int8_t)temp;*/
   //SerialPort.println(finalOut);
+  /*SerialPort.print(imu.magX);
+  SerialPort.print(",");
+  SerialPort.print(imu.magY);
+  SerialPort.print(",");
+  SerialPort.println(imu.magZ);*/
   delay(200);
 }
 
 
 void printIMUData()
 {
-  imu.accelX = imu.calcAccel(imu.ax);
-  imu.accelY = imu.calcAccel(imu.ay);
-  imu.accelZ = -(imu.az + 1040)/imu._aSense;
-  imu.magX = imu.alpha*((imu.mx/6.665)-imu.mag_Bias[0])*imu.mag_Scale[0] + (1.0 - imu.alpha)*imu.magX;
-  imu.magY = imu.alpha*((imu.my/6.665)-imu.mag_Bias[1])*imu.mag_Scale[1] + (1.0 - imu.alpha)*imu.magY;
-  imu.magZ = imu.alpha*((imu.mz/6.665)-imu.mag_Bias[2])*imu.mag_Scale[2] + (1.0 - imu.alpha)*imu.magZ;
+  imu.accelX = imu.ax/(float)imu._aSense;
+  imu.accelY = imu.ay/(float)imu._aSense;
+  imu.accelZ = -(imu.az)/(float)imu._aSense; //imu._aSense needs to be float-cast as it is an unsigned short, might look into changing to float at some point.
+  imu.magX = imu.alpha*((imu.mx)-imu.mag_Bias[0])*imu.mag_Scale[0] + (1.0 - imu.alpha)*imu.magY;
+  imu.magY = imu.alpha*((imu.my)-imu.mag_Bias[1])*imu.mag_Scale[1] + (1.0 - imu.alpha)*imu.magX;
+  imu.magZ = imu.alpha*((imu.mz)-imu.mag_Bias[2])*imu.mag_Scale[2] + (1.0 - imu.alpha)*imu.magZ;
   imu.currAccelX = imu.accelX * imu.alpha + (imu.currAccelX * (1.0 - imu.alpha));
   imu.currAccelY = imu.accelY * imu.alpha + (imu.currAccelY * (1.0 - imu.alpha));
   imu.currAccelZ = imu.accelZ * imu.alpha + (imu.currAccelZ * (1.0 - imu.alpha));
-  imu.roll = abs(atan2(-imu.currAccelY, imu.currAccelZ));
-  imu.pitch = abs(atan2(imu.currAccelX, sqrt(imu.currAccelY*imu.currAccelY + imu.currAccelZ*imu.currAccelZ)));
-  Yh = imu.magY * cos(imu.roll) + imu.magZ * sin(imu.roll);
-  Xh = imu.magX*cos(imu.pitch) + imu.magY*sin(imu.roll)*sin(imu.pitch) - imu.magZ*cos(imu.roll)*sin(imu.pitch);
+  imu.roll = atan2(imu.currAccelY, sqrt(imu.currAccelX * imu.currAccelX + imu.currAccelZ * imu.currAccelZ));
+  imu.pitch = -atan2(imu.currAccelX, sqrt(imu.currAccelY * imu.currAccelY + imu.currAccelZ * imu.currAccelZ));
+  Yh = imu.magY * cos(imu.roll) - imu.magZ * sin(imu.roll);
+  Xh = imu.magX * cos(imu.pitch) + imu.magY * sin(imu.roll) * sin(imu.pitch) + imu.magZ * cos(imu.roll) * sin(imu.pitch);
   imu.heading = atan2(Yh,Xh);
 
 }

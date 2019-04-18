@@ -18,9 +18,9 @@ void setup() {
 }
 
 void loop() {
-  //calibrateMag(60000); //calibrate the magnetometer for 60s
+  calibrateMag(60000); //calibrate the magnetometer for 60s
   SerialPort.print("\n\n\n");
-  calibrateAccel(10000); //calibrate the accelerometer for 10s
+  //calibrateAccel(20000); //calibrate the accelerometer for 10s
   SerialPort.print("\n\n\n");
   //calibrateGyro(10000); //calibrate the Gyro for 10s
 }
@@ -31,7 +31,19 @@ void calibrateMag(uint32_t calibTime)
   while (millis() - timer < calibTime)
   {
     imu.update(UPDATE_ACCEL | UPDATE_GYRO | UPDATE_COMPASS);
-    SerialPort.print("mag,");
+    SerialPort.print("Raw:");
+    SerialPort.print(imu.ax);
+    SerialPort.print(",");
+    SerialPort.print(imu.ay);
+    SerialPort.print(",");
+    SerialPort.print(imu.az);
+    SerialPort.print(",");
+    SerialPort.print(imu.gx);
+    SerialPort.print(",");
+    SerialPort.print(imu.gy);
+    SerialPort.print(",");
+    SerialPort.print(imu.gz);
+    SerialPort.print(",");
     SerialPort.print(imu.mx);
     SerialPort.print(",");
     SerialPort.print(imu.my);
