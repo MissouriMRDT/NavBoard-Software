@@ -2,7 +2,6 @@
 //#include <Ethernet.h>
 //#include <EthernetUdp.h>
 
-#include "RoveBoard.h"
 #include "RoveComm.h"
 #include "Quaternion.h"
 #include "LSM90S1.h"
@@ -13,7 +12,15 @@
 
 RoveCommEthernetUdp RoveComm;
 
+#define DIRECTION_SWITCH_PIN    PD_2
+#define LF_BUTTON_PIN           PK_2
+#define LM_BUTTON_PIN           PK_3
+#define LR_BUTTON_PIN           PN_4
+#define RF_BUTTON_PIN           PN_5
+#define RM_BUTTON_PIN           PP_4
+#define RR_BUTTON_PIN           PQ_0
 
+const int BUTTONS = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_PIN, RM_BUTTON_PIN, RR_BUTTON_PIN}
 
 Quaternion fusion;
 
@@ -38,6 +45,10 @@ int bytesToRead = 0;
 size_t imuRead = 0;
 int imuHeading = 0;
 int16_t tempHeading = 0;
+
+void sendButtonCommands();
+void setupButtonCommands();
+
 void setup()
 {
   Wire.setModule(0);
@@ -78,13 +89,16 @@ void setup()
   //IMU.calibrateAccel(1000);
 
   //roveAttachTimerInterrupt(updateIMU,  T0_A, 100, 1);
-  
+
+  setupButtonCOmmands();
 }//end
 
 uint32_t timer = millis();
 
 void loop()
 {
+  sendButtonCommands();
+  
   rovecomm_packet packet;
   packet = RoveComm.read();
   //leaving this with no parsing for now as we don't currently have a reason to communicate to NavBoard
@@ -292,3 +306,32 @@ void readIMU()
     Serial.println("No IMU Data");
   }
 } //end readIMU
+
+void setupButtonCommands()
+{
+  pinMode(DIRECTION_SWITCH_PIN, INPUT);
+
+  for(int i = 0; i<6; i++)
+  {
+    pinMode(BUTTONS[i], INPUT);
+  }
+}
+
+void sendButtonCommands()
+{
+  bool button_pressed = false;
+  int16_t data = {0, 0, 0, 0, 0, 0}
+  bool direction = digitalRead(DIRECTION_SWITCH_PIN)? 1 :-1;
+  for(int i = 0; i<6; i++)
+  {
+    if(digitalRead(BUTTONS))
+    {
+      data[i] = 500*direction;
+      button_pressed = true;
+    }
+  }
+  if(button_pressed)
+  {
+    RoveComm.write(RC_DRIVEBOARD_DRIVEMOTORS_HEADER, data);
+  }
+}
