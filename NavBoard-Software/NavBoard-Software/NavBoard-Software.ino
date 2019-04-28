@@ -19,9 +19,12 @@ Quaternion fusion;
 
 LSM90S1 IMU;
 
-uint32_t gpsLatLon[2] = {0,0};
+uint32_t gpsLatLon[2] = {883454352,883454352};
 int16_t finalImuData[3] = {0,0,0}; //we're currently sending as radians instead of degrees.
-
+uint8_t gpsTelemetry[2] = {0,0};
+uint32_t gpsLatLast = 0;
+uint32_t gpsLonLast = 0;
+int lidarDistance = 0;
 Adafruit_GPS GPS(&Serial7);
 //SoftwareSerial mySerial(3, 2);
 
@@ -43,15 +46,17 @@ void setup()
   Serial.begin(115200);
   Serial.println("Serial begin");
   delay(1000);
-  Serial2.begin(115200);
+  Serial2.begin(9600);
   Serial.println("Serial2 IMU begin");
   delay(1000);
   Serial2.setTimeout(50);
-
+  delay(1000);
+  Serial5.begin(19200);
+  delay(1000);
   //connect to roveComm
   Ethernet.enableActivityLed();
   Ethernet.enableLinkLed();
-  RoveComm.begin(RC_SHIMBLENAVBOARD_FOURTHOCTET);
+  RoveComm.begin(136);//RC_SHIMBLENAVBOARD_FOURTHOCTET);
   //Serial.println("roveComm_Begin");
 
   //9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
@@ -115,7 +120,7 @@ void loop()
   // approximately every 2 milliseconds or so, print out the current stats
   // test this value with varying update frequencies
   uint32_t atimer = millis();
-  if (millis() - timer > 200) {
+  if (millis() - timer > 250) {
     timer = millis(); // reset the timer
 
     //debug
@@ -136,15 +141,27 @@ void loop()
 
     //Serial.print(" quality: "); Serial.println(GPS.fixquality);
     //roveComm_SendMsg(GPS_FIX_QUALITY_DATA_ID, sizeof(GPS.fixquality), &GPS.fixquality);
-
-    if (GPS.fix)
-    {
+    
+    //if (GPS.fix)
+    //{
       //TODO: VERIFY ADAFRUIT_GPS PULL #13
-      gpsLatLon[0] = GPS.latitude_fixed;
-      gpsLatLon[1] = GPS.longitude_fixed;
+      if (!(GPS.longitude_fixed < 900000000)) //883454352
+      {
+        gpsLatLon[0] = GPS.longitude_fixed;
+      }
+      if (!(GPS.latitude_fixed < 300000000))
+      {
+        gpsLatLon[1] = GPS.latitude_fixed;
+      }
+      //gpsLatLon[0] = GPS.longitude_fixed;
+      //gpsLatLon[1] = GPS.latitude_fixed;
       Serial.println(gpsLatLon[0]);
       Serial.println(gpsLatLon[1]);
-
+      //Serial.println(GPS.longitude_fixed);
+      //Serial.println(GPS.latitude_fixed);
+      //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
+      
+      
       /*Serial.print("Speed (knots): "); Serial.println(GPS.speed);
       roveComm_SendMsg(GPS_SPEED_DATA_ID, sizeof(GPS.speed), &GPS.speed);
       Serial.print("Angle: "); Serial.println(GPS.angle);
@@ -153,9 +170,14 @@ void loop()
       roveComm_SendMsg(GPS_ALTITUDE_DATA_ID, sizeof(GPS.altitude), &GPS.altitude);
       Serial.print("Satellites: "); Serial.println(GPS.satellites);
       roveComm_SendMsg(GPS_SATELLITES_DATA_ID, sizeof(GPS.satellites), &GPS.satellites);*/
-    }//end if
-
+    //}//end if
+    
+      gpsTelemetry[0] = GPS.fixquality;
+      gpsTelemetry[1] = GPS.satellites;
+      RoveComm.write(GPS_FIX_SATELLITES_DATAID, 2, gpsTelemetry);
       RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
+      gpsLatLast = gpsLatLon[0];
+      gpsLonLast = gpsLatLon[1];
 
   //temperature section
   int16_t temperature;
@@ -209,10 +231,18 @@ void loop()
   //roveComm_SendMsg(IMU_ACCEL_DATA_ID, sizeof(ACCEL_DATA), ACCEL_DATA);
   //roveComm_SendMsg(IMU_MAG_DATA_ID, sizeof(MAG_DATA), MAG_DATA);
 
+
+  if(Serial5.available())
+  {
+    lidarDistance = Serial5.parseInt();
+    Serial5.flush();
+    Serial.print("\nLidar: ");
+    Serial.println(lidarDistance);
+  }
   }//end if
   
   
-
+ 
 }//end loop
 
 void updateIMU()
@@ -228,6 +258,7 @@ void readIMU()
   Serial.println(bytesToRead);
   if(bytesToRead > 0)
   {
+    delay(100);
   while(bytesToRead > 0)
   {
     bytesToRead = Serial2.available();
@@ -250,7 +281,11 @@ void readIMU()
   }
   imuHeading = tempHeading;
   finalImuData[1] = tempHeading;
+  finalImuData[1] += 180;
+  finalImuData[1] = finalImuData[1]%360;
+  //finalImuData[1] = map(
   Serial.println();
+  Serial2.flush();
   }
   else
   {

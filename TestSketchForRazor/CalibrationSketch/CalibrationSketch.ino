@@ -31,7 +31,7 @@ void calibrateMag(uint32_t calibTime)
   while (millis() - timer < calibTime)
   {
     imu.update(UPDATE_ACCEL | UPDATE_GYRO | UPDATE_COMPASS);
-    SerialPort.print("Raw:");
+    /*SerialPort.print("Raw:");
     SerialPort.print(imu.ax);
     SerialPort.print(",");
     SerialPort.print(imu.ay);
@@ -43,6 +43,8 @@ void calibrateMag(uint32_t calibTime)
     SerialPort.print(imu.gy);
     SerialPort.print(",");
     SerialPort.print(imu.gz);
+    SerialPort.print(",");*/
+    SerialPort.print("mag");
     SerialPort.print(",");
     SerialPort.print(imu.mx);
     SerialPort.print(",");
