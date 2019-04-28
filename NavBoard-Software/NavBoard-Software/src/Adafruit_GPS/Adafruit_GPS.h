@@ -15,8 +15,8 @@ All text above must be included in any redistribution
 ****************************************/
 // Fllybob added lines 34,35 and 40,41 to add 100mHz logging capability 
 
-#ifndef _ADAFRUIT_GPS_H
-#define _ADAFRUIT_GPS_H
+#ifndef __ADAFRUIT_GPS_H
+#define __ADAFRUIT_GPS_H
 
 #ifdef __AVR__
   #if ARDUINO >= 100

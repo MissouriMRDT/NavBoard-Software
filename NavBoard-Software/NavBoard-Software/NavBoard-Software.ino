@@ -2,8 +2,7 @@
 #include "RoveComm.h"
 //#include "roveAttachTimerInterrupt.h"
 
-//#include <Adafruit_GPS.h>
-#include "libraries/Adafruit_GPS/Adafruit_GPS.h"
+#include "src/Adafruit_GPS/Adafruit_GPS.h"
 //#include <SoftwareSerial.h>
 
 RoveCommEthernetUdp RoveComm;
@@ -56,11 +55,11 @@ void setup()
   Serial2.setTimeout(50);
   delay(1000);
   Serial5.begin(19200);
-  delay(1000);
   //connect to roveComm
   Ethernet.enableActivityLed();
   Ethernet.enableLinkLed();
   RoveComm.begin(RC_NAVCAMERABOARD_FOURTHOCTET);
+  delay(1000);
   //Serial.println("roveComm_Begin");
 
   //9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
@@ -211,7 +210,7 @@ void sendButtonCommands()
   bool direction = digitalRead(DIRECTION_SWITCH_PIN)? 1 :-1;
   for(int i = 0; i<6; i++)
   {
-    if(digitalRead(BUTTONS))
+    if(digitalRead(BUTTONS[i]))
     {
       data[i] = 500*direction;
       button_pressed = true;
