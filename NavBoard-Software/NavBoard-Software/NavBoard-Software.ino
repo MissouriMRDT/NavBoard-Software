@@ -1,13 +1,9 @@
-//#include <SPI.h>
-//#include <Ethernet.h>
-//#include <EthernetUdp.h>
-
+#include "Energia.h"
 #include "RoveComm.h"
-#include "Quaternion.h"
-#include "LSM90S1.h"
 //#include "roveAttachTimerInterrupt.h"
 
-#include <Adafruit_GPS.h>
+//#include <Adafruit_GPS.h>
+#include "libraries/Adafruit_GPS/Adafruit_GPS.h"
 //#include <SoftwareSerial.h>
 
 RoveCommEthernetUdp RoveComm;
@@ -20,11 +16,11 @@ RoveCommEthernetUdp RoveComm;
 #define RM_BUTTON_PIN           PP_4
 #define RR_BUTTON_PIN           PQ_0
 
-const int BUTTONS = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_PIN, RM_BUTTON_PIN, RR_BUTTON_PIN}
+const int BUTTONS[6] = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_PIN, RM_BUTTON_PIN, RR_BUTTON_PIN};
 
-Quaternion fusion;
+//Quaternion fusion;
 
-LSM90S1 IMU;
+//LSM90S1 IMU;
 
 uint32_t gpsLatLon[2] = {883454352,883454352};
 int16_t finalImuData[3] = {0,0,0}; //we're currently sending as radians instead of degrees.
@@ -45,14 +41,11 @@ int bytesToRead = 0;
 size_t imuRead = 0;
 int imuHeading = 0;
 int16_t tempHeading = 0;
-
 void sendButtonCommands();
 void setupButtonCommands();
 
 void setup()
 {
-  Wire.setModule(0);
-  Wire.begin();
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   Serial.begin(115200);
   Serial.println("Serial begin");
@@ -75,7 +68,7 @@ void setup()
 
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
 
-  fusion.init();
+  //fusion.init();
   //Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   
@@ -90,7 +83,7 @@ void setup()
 
   //roveAttachTimerInterrupt(updateIMU,  T0_A, 100, 1);
 
-  setupButtonCOmmands();
+  setupButtonCommands();
 }//end
 
 uint32_t timer = millis();
@@ -259,11 +252,11 @@ void loop()
  
 }//end loop
 
-void updateIMU()
+/*void updateIMU()
 {
   IMU.read();
   count++;
-}
+}*/
 
 void readIMU()
 {
@@ -320,7 +313,7 @@ void setupButtonCommands()
 void sendButtonCommands()
 {
   bool button_pressed = false;
-  int16_t data = {0, 0, 0, 0, 0, 0}
+  int16_t data[6] = {0, 0, 0, 0, 0, 0};
   bool direction = digitalRead(DIRECTION_SWITCH_PIN)? 1 :-1;
   for(int i = 0; i<6; i++)
   {
