@@ -22,6 +22,7 @@ const int BUTTONS[6] = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_P
 //LSM90S1 IMU;
 
 uint32_t gpsLatLon[2] = {0,0};
+uint16_t lidarStuff[2] = {0,0};
 int16_t finalImuData[3] = {0,0,0}; //we're currently sending as radians instead of degrees.
 uint8_t gpsTelemetry[2] = {0,0};
 uint32_t gpsLatLast = 0;
@@ -32,7 +33,7 @@ Adafruit_GPS GPS(&Serial7);
 //SoftwareSerial mySerial(3, 2);
 
 void updateIMU();
-int count = 0;
+uint16_t count = 0;
 int heading = 0;
 //string readingIMU1 = "";
 //string readingIMU2 = "";
@@ -92,17 +93,22 @@ void loop()
   uint32_t atimer = millis();
   if (millis() - timer > 50) {
     timer = millis(); // reset the timer
+    readGPS();
+    readIMU();
+    readLidar();
+
     if (count % 5 == 0)
     {
-    readGPS();
+       //RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
+       //RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
+       //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
-    if (count % 3 == 0)
+    if (count % 2 == 0)
     {
-    readIMU();
+       RoveComm.write(RC_LIDAR_DISTANCE_DATAID, 2, lidarStuff);
     }
-    readLidar();  
   }//end loop with delay
-  
+  count++;
 }//end loop
 
 void readIMU()
@@ -146,7 +152,7 @@ void readIMU()
     //Serial.println("No IMU Data");
   }
   
-  RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
+  //RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
 } //end readIMU
 
 void setupButtonCommands()
@@ -218,8 +224,8 @@ void readGPS()
     
   gpsTelemetry[0] = GPS.fixquality;
   gpsTelemetry[1] = GPS.satellites;
-  RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
-  RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
+  //RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
+  //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
 
 }
 
@@ -253,9 +259,12 @@ void readLidar()
     Serial.println(lidarDistance);
     //Serial.print("\nLidar: ");
     //Serial.println(lidarDistance);
+    lidarStuff[0] = lidarDistance;
+    lidarStuff[1] = 5;
   }
   else
   {
+    lidarStuff[1] = lidarStuff[1] - 1;
     Serial.println("Serial5 Unavaliable");
   }
 }
