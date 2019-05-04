@@ -99,9 +99,9 @@ void loop()
 
     if (count % 5 == 0)
     {
-       //RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
-       //RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
-       //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
+       RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
+       RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
+       RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
     if (count % 2 == 0)
     {
