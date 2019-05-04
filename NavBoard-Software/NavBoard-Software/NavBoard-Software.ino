@@ -21,12 +21,13 @@ const int BUTTONS[6] = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_P
 
 //LSM90S1 IMU;
 
-uint32_t gpsLatLon[2] = {883454352,883454352};
+uint32_t gpsLatLon[2] = {0,0};
 int16_t finalImuData[3] = {0,0,0}; //we're currently sending as radians instead of degrees.
 uint8_t gpsTelemetry[2] = {0,0};
 uint32_t gpsLatLast = 0;
 uint32_t gpsLonLast = 0;
 int lidarDistance = 0;
+char lidarData[15] = {};
 Adafruit_GPS GPS(&Serial7);
 //SoftwareSerial mySerial(3, 2);
 
@@ -49,12 +50,12 @@ void setup()
   Serial.begin(115200);
   //Serial.println("Serial begin");
   delay(1000);
-  Serial2.begin(9600);
+  Serial2.begin(115200);
   //Serial.println("Serial2 IMU begin");
   delay(1000);
   Serial2.setTimeout(50);
   delay(1000);
-  Serial5.begin(19200);
+  Serial5.begin(115200);
   //connect to roveComm
   Ethernet.enableActivityLed();
   Ethernet.enableLinkLed();
@@ -82,71 +83,24 @@ void loop()
   rovecomm_packet packet;
   packet = RoveComm.read();
   //leaving this with no parsing for now as we don't currently have a reason to communicate to NavBoard
-  char c = GPS.read();
-  delay(10);
-
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-
-    if (!GPS.parse(GPS.lastNMEA() ) )// this also sets the newNMEAreceived() flag to false
-    {
-      return;  // we can fail to parse a sentence in which case we should just wait for another
-    }//end if
-
-  }//end if
-
+  
   // if millis() or timer wraps around, we'll just reset it
   if (timer > millis())
   {
     timer = millis();
   }//end if
   uint32_t atimer = millis();
-  if (millis() - timer > 250) {
+  if (millis() - timer > 50) {
     timer = millis(); // reset the timer
-
-    if(!GPS.fix)
+    if (count % 5 == 0)
     {
-      GPS.fixquality = 0;
-    }//end if
-    
-    //if (GPS.fix)
-    //{
-      //TODO: VERIFY ADAFRUIT_GPS PULL #13
-      if (!(GPS.longitude_fixed < 900000000) || !(GPS.longitude_fixed > 930000000)) //require longitude to be in Missouri-ish
-      {
-        gpsLatLon[0] = GPS.longitude_fixed;
-      }
-      if (!(GPS.latitude_fixed < 300000000) || !(GPS.latitude_fixed > 330000000)) //require latitude to be in Missouri-ish
-      {
-        gpsLatLon[1] = GPS.latitude_fixed;
-      }
-      //gpsLatLon[0] = GPS.longitude_fixed;
-      //gpsLatLon[1] = GPS.latitude_fixed;
-      //Serial.println(gpsLatLon[0]);
-      //Serial.println(gpsLatLon[1]);
-      //Serial.println(GPS.longitude_fixed);
-      //Serial.println(GPS.latitude_fixed);
-      //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon); //was having issues with the software fix flag even though hardware was good. Try NavBoardRev3
-    //}//end if
-    
-  gpsTelemetry[0] = GPS.fixquality;
-  gpsTelemetry[1] = GPS.satellites;
-  RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
-  RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
-  gpsLatLast = gpsLatLon[0];
-  gpsLonLast = gpsLatLon[1];
-
-  readIMU();
-  //Serial.println(finalImuData[1]);
-  RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
-
-  if(Serial5.available())
-  {
-    lidarDistance = Serial5.parseInt();
-    Serial5.flush();
-    //Serial.print("\nLidar: ");
-    //Serial.println(lidarDistance);
-  }
+    readGPS();
+    }
+    if (count % 3 == 0)
+    {
+    readIMU();
+    }
+    readLidar();  
   }//end loop with delay
   
 }//end loop
@@ -191,6 +145,8 @@ void readIMU()
   {
     //Serial.println("No IMU Data");
   }
+  
+  RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
 } //end readIMU
 
 void setupButtonCommands()
@@ -219,5 +175,87 @@ void sendButtonCommands()
   if(button_pressed)
   {
     RoveComm.write(RC_DRIVEBOARD_DRIVEMOTORS_HEADER, data);
+  }
+}
+void readGPS()
+{
+  char c = GPS.read();
+  delay(10);
+
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+
+    if (!GPS.parse(GPS.lastNMEA() ) )// this also sets the newNMEAreceived() flag to false
+    {
+      return;  // we can fail to parse a sentence in which case we should just wait for another
+    }//end if
+
+  }//end if
+  if(!GPS.fix)
+    {
+      GPS.fixquality = 0;
+    }//end if
+    
+    //if (GPS.fix)
+    //{
+      //TODO: VERIFY ADAFRUIT_GPS PULL #13
+      if (!(GPS.longitude_fixed < 900000000) || !(GPS.longitude_fixed > 930000000)) //require longitude to be in Missouri-ish
+      {
+        gpsLatLon[0] = GPS.longitude_fixed;
+      }
+      if (!(GPS.latitude_fixed < 300000000) || !(GPS.latitude_fixed > 330000000)) //require latitude to be in Missouri-ish
+      {
+        gpsLatLon[1] = GPS.latitude_fixed;
+      }
+      //gpsLatLon[0] = GPS.longitude_fixed;
+      //gpsLatLon[1] = GPS.latitude_fixed;
+      //Serial.println(gpsLatLon[0]);
+      //Serial.println(gpsLatLon[1]);
+      //Serial.println(GPS.longitude_fixed);
+      //Serial.println(GPS.latitude_fixed);
+      //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon); //was having issues with the software fix flag even though hardware was good. Try NavBoardRev3
+    //}//end if
+    
+  gpsTelemetry[0] = GPS.fixquality;
+  gpsTelemetry[1] = GPS.satellites;
+  RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
+  RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
+
+}
+
+void readLidar()
+{
+  if(Serial5.available())
+  {
+    delay(20);
+    lidarDistance = 0;
+    //while(bytesToRead > 0)
+    //{
+    bytesToRead = Serial5.available();
+    for(int i = 0; i < 10;i++)
+    {
+      if(bytesToRead > 0)
+      {
+       lidarData[i] = Serial5.read();
+      }
+    }
+    //}
+    for (int i = 0; i < 5; i++)
+    {
+      if (lidarData[i] >= '0' && lidarData[i] <= '9')
+      {
+      lidarDistance *= 10;
+      lidarDistance += lidarData[i] - '0';
+      }
+    }
+    Serial5.flush();
+    Serial.print("Lidar: ");
+    Serial.println(lidarDistance);
+    //Serial.print("\nLidar: ");
+    //Serial.println(lidarDistance);
+  }
+  else
+  {
+    Serial.println("Serial5 Unavaliable");
   }
 }
