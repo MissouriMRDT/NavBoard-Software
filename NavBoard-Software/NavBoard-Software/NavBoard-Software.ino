@@ -168,19 +168,30 @@ void setupButtonCommands()
 void sendButtonCommands()
 {
   bool button_pressed = false;
-  int16_t data[6] = {0, 0, 0, 0, 0, 0};
-  bool direction = digitalRead(DIRECTION_SWITCH_PIN)? 1 :-1;
-  for(int i = 0; i<6; i++)
+  static bool send_last_0 = false;
+  static int last_send_time = 0;
+  if (millis() - last_send_time >= 250)
   {
-    if(digitalRead(BUTTONS[i]))
+    Serial.print("---"); Serial.println(digitalRead(DIRECTION_SWITCH_PIN));
+    last_send_time = millis();
+    int16_t data[6] = {0, 0, 0, 0, 0, 0};
+    int8_t direction = digitalRead(DIRECTION_SWITCH_PIN)? 1 :-1;
+    for(int i = 0; i<6; i++)
     {
-      data[i] = 500*direction;
-      button_pressed = true;
+      if(digitalRead(BUTTONS[i]))
+      {
+        data[i] = 100*direction;
+        button_pressed = true;
+        send_last_0 = true;
+      }
+      Serial.print(i); Serial.print(":");Serial.println(data[i]);
     }
-  }
-  if(button_pressed)
-  {
-    RoveComm.write(RC_DRIVEBOARD_DRIVEMOTORS_HEADER, data);
+    if(button_pressed || send_last_0)
+    {
+      RoveComm.writeTo(RC_DRIVEBOARD_DRIVEMOTORS_HEADER, data, 192, 168, 1, RC_DRIVEBOARD_FOURTHOCTET, RC_ROVECOMM_ETHERNET_UDP_PORT);
+      Serial.println("Sending");
+      send_last_0 = button_pressed;
+    }
   }
 }
 void readGPS()
