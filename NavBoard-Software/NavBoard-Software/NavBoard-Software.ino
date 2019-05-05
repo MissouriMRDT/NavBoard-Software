@@ -93,7 +93,9 @@ void loop()
   }//end if
   uint32_t atimer = millis();
   readGPS();
-  if (millis() - timer > 50) {
+  if (millis() - timer > 50) { //Execute this block every 50 ms
+    //Serial.print(millis() - timer);
+    //Serial.print(";");
     timer = millis(); // reset the timer
     
     readIMU();
@@ -101,24 +103,26 @@ void loop()
     //Serial.println(gpsLatLon[0]);
     //Serial.println(gpsLatLon[1]);
 
-    if (count % 5 == 0)
+    if (count % 5 == 0) //Every 250 ms
     {
-       Serial.println(gpsLatLon[0]);
-       Serial.println(gpsLatLon[1]);
        RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
        RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
        //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon); // moving to 1/200ms
     }
-    if (count % 4 == 0)
+    if (count % 4 == 0) //Every 200 ms
     {
+      //Serial.print(gpsLatLon[0]);
+       //Serial.println(gpsLatLon[1]);
        RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
-    if (count % 2 == 0)
+    //Serial.println("");
+    if (count % 2 == 0) //Every 100ms
     {
        RoveComm.write(RC_LIDAR_DISTANCE_DATAID, 2, lidarStuff);
     }
+    count++;
   }//end loop with delay
-  count++;
+  
 }//end loop
 
 void readIMU()
@@ -218,7 +222,7 @@ void readGPS()
     {
       return;  // we can fail to parse a sentence in which case we should just wait for another
     }//end if
-    //Serial.println("New Rx");
+    //Serial.println(GPS.lastNMEA());
   }//end if
   if(!GPS.fix)
     {
