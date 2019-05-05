@@ -11,7 +11,7 @@ All text above must be included in any redistribution
   // Only include software serial on AVR platforms (i.e. not on Due).
   #include <SoftwareSerial.h>
 #endif
-#include <Adafruit_GPS.h>
+#include "Adafruit_GPS.h"
 
 // how long are max NMEA lines to parse?
 #define MAXLINELENGTH 120
@@ -381,6 +381,7 @@ void Adafruit_GPS::pause(boolean p) {
 char *Adafruit_GPS::lastNMEA(void) {
   recvdflag = false;
   return (char *)lastline;
+  
 }
 
 // read a Hex value and return the decimal equivalent
