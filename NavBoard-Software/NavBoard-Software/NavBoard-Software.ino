@@ -31,7 +31,7 @@ int lidarDistance = 0;
 char lidarData[15] = {};
 Adafruit_GPS GPS(&Serial7);
 //SoftwareSerial mySerial(3, 2);
-
+//char c;
 void updateIMU();
 uint16_t count = 0;
 int heading = 0;
@@ -67,10 +67,11 @@ void setup()
   //9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
 
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
 
   //Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   //10Hz update rate
+  GPS.sendCommand(PMTK_API_SET_FIX_CTL_5HZ);    //5Hz is the fastest it can go.
   
   setupButtonCommands();
 }//end
@@ -91,16 +92,25 @@ void loop()
     timer = millis();
   }//end if
   uint32_t atimer = millis();
+  readGPS();
   if (millis() - timer > 50) {
     timer = millis(); // reset the timer
-    readGPS();
+    
     readIMU();
     readLidar();
+    //Serial.println(gpsLatLon[0]);
+    //Serial.println(gpsLatLon[1]);
 
     if (count % 5 == 0)
     {
+       Serial.println(gpsLatLon[0]);
+       Serial.println(gpsLatLon[1]);
        RoveComm.write(RC_NAVBOARD_IMUPYR_DATAID, 3, finalImuData);
        RoveComm.write(RC_NAVBOARD_GPSADD_DATAID, 2, gpsTelemetry);
+       //RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon); // moving to 1/200ms
+    }
+    if (count % 4 == 0)
+    {
        RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
     if (count % 2 == 0)
@@ -172,7 +182,7 @@ void sendButtonCommands()
   static int last_send_time = 0;
   if (millis() - last_send_time >= 250)
   {
-    Serial.print("---"); Serial.println(digitalRead(DIRECTION_SWITCH_PIN));
+    //Serial.print("---"); Serial.println(digitalRead(DIRECTION_SWITCH_PIN));
     last_send_time = millis();
     int16_t data[6] = {0, 0, 0, 0, 0, 0};
     int8_t direction = digitalRead(DIRECTION_SWITCH_PIN)? 1 :-1;
@@ -184,7 +194,7 @@ void sendButtonCommands()
         button_pressed = true;
         send_last_0 = true;
       }
-      Serial.print(i); Serial.print(":");Serial.println(data[i]);
+      //Serial.print(i); Serial.print(":");Serial.println(data[i]);
     }
     if(button_pressed || send_last_0)
     {
@@ -197,7 +207,9 @@ void sendButtonCommands()
 void readGPS()
 {
   char c = GPS.read();
-  delay(10);
+  //delay(10);
+  //Serial.write(c);
+  //Serial.println("attempting read");
 
   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
@@ -206,7 +218,7 @@ void readGPS()
     {
       return;  // we can fail to parse a sentence in which case we should just wait for another
     }//end if
-
+    //Serial.println("New Rx");
   }//end if
   if(!GPS.fix)
     {
@@ -216,16 +228,17 @@ void readGPS()
     //if (GPS.fix)
     //{
       //TODO: VERIFY ADAFRUIT_GPS PULL #13
-      if (!(GPS.longitude_fixed < 900000000) || !(GPS.longitude_fixed > 930000000)) //require longitude to be in Missouri-ish
+      if (!(GPS.longitude_fixed < 900000000) && !(GPS.longitude_fixed > 930000000)) //require longitude to be in Missouri-ish
       {
         gpsLatLon[0] = GPS.longitude_fixed;
       }
-      if (!(GPS.latitude_fixed < 300000000) || !(GPS.latitude_fixed > 330000000)) //require latitude to be in Missouri-ish
+      if (!(GPS.latitude_fixed < 360000000) && !(GPS.latitude_fixed > 390000000)) //require latitude to be in Missouri-ish
       {
         gpsLatLon[1] = GPS.latitude_fixed;
       }
       //gpsLatLon[0] = GPS.longitude_fixed;
       //gpsLatLon[1] = GPS.latitude_fixed;
+      //Serial.println();
       //Serial.println(gpsLatLon[0]);
       //Serial.println(gpsLatLon[1]);
       //Serial.println(GPS.longitude_fixed);
@@ -266,8 +279,8 @@ void readLidar()
       }
     }
     Serial5.flush();
-    Serial.print("Lidar: ");
-    Serial.println(lidarDistance);
+    //Serial.print("Lidar: ");
+    //Serial.println(lidarDistance);
     //Serial.print("\nLidar: ");
     //Serial.println(lidarDistance);
     lidarStuff[0] = lidarDistance;
@@ -276,6 +289,6 @@ void readLidar()
   else
   {
     lidarStuff[1] = lidarStuff[1] - 1;
-    Serial.println("Serial5 Unavaliable");
+    //Serial.println("Serial5 Unavaliable");
   }
 }

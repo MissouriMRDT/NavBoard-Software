@@ -381,6 +381,7 @@ void Adafruit_GPS::pause(boolean p) {
 char *Adafruit_GPS::lastNMEA(void) {
   recvdflag = false;
   return (char *)lastline;
+  
 }
 
 // read a Hex value and return the decimal equivalent
