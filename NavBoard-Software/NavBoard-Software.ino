@@ -1,4 +1,4 @@
-#include "Energia.h"
+//#include "Energia.h"
 #include "RoveComm.h"
 //#include "roveAttachTimerInterrupt.h"
 
@@ -70,7 +70,7 @@ void setup()
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
 
   //Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   //10Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);    //5Hz update rate
   GPS.sendCommand(PMTK_API_SET_FIX_CTL_5HZ);    //5Hz is the fastest it can go.
   
   setupButtonCommands();
@@ -111,8 +111,7 @@ void loop()
     }
     if (count % 4 == 0) //Every 200 ms
     {
-      //Serial.print(gpsLatLon[0]);
-       //Serial.println(gpsLatLon[1]);
+       Serial.print(gpsLatLon[0]); Serial.print(","); Serial.println(gpsLatLon[1]);
        RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
     //Serial.println("");
