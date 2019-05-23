@@ -15,6 +15,8 @@ RoveCommEthernetUdp RoveComm;
 #define RM_BUTTON_PIN           PP_4
 #define RR_BUTTON_PIN           PQ_0
 
+#define PMTK_DISABLE_NAVIGATION_THRESHOLD "$$PMTK386,0*23"
+
 const int BUTTONS[6] = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_PIN, RM_BUTTON_PIN, RR_BUTTON_PIN};
 
 //Quaternion fusion;
@@ -69,6 +71,8 @@ void setup()
 
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
 
+  GPS.sendCommand(PMTK_DISABLE_NAVIGATION_THRESHOLD);
+
   //Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);    //5Hz update rate
   GPS.sendCommand(PMTK_API_SET_FIX_CTL_5HZ);    //5Hz is the fastest it can go.
@@ -111,7 +115,7 @@ void loop()
     }
     if (count % 4 == 0) //Every 200 ms
     {
-       Serial.print(gpsLatLon[0]); Serial.print(","); Serial.println(gpsLatLon[1]);
+       //Serial.print(gpsLatLon[0]); Serial.print(","); Serial.println(gpsLatLon[1]);
        RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
     //Serial.println("");
@@ -131,7 +135,7 @@ void readIMU()
   //Serial.println(bytesToRead);
   if(bytesToRead > 0)
   {
-    delay(100); //test smaller values to improve turn-around time for autonomy
+    delay(10); //test smaller values to improve turn-around time for autonomy
   while(bytesToRead > 0)
   {
     bytesToRead = Serial2.available();
@@ -211,7 +215,7 @@ void readGPS()
 {
   char c = GPS.read();
   //delay(10);
-  //Serial.write(c);
+  Serial.write(c);
   //Serial.println("attempting read");
 
   // if a sentence is received, we can check the checksum, parse it...
