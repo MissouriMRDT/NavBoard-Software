@@ -15,7 +15,13 @@ RoveCommEthernetUdp RoveComm;
 #define RM_BUTTON_PIN           PP_4
 #define RR_BUTTON_PIN           PQ_0
 
-#define PMTK_DISABLE_NAVIGATION_THRESHOLD "$$PMTK386,0*23"
+#define DECLINATION 15 //Hanksville Declination as of 5/28/19
+
+
+#define PMTK_DISABLE_NAVIGATION_THRESHOLD1 "$PMTK386,0.0*32"
+#define PMTK_DISABLE_NAVIGATION_THRESHOLD "$PMTK386,0*23"
+//#define PMTK_DISABLE_NAVIGATION_THRESHOLD "$PMTK386,0.2*3F"
+#define PMTK_DISABLE_PERIODIC_MODE "$PMTK225,0*2B"
 
 const int BUTTONS[6] = {LF_BUTTON_PIN, LM_BUTTON_PIN, LR_BUTTON_PIN, RF_BUTTON_PIN, RM_BUTTON_PIN, RR_BUTTON_PIN};
 
@@ -51,7 +57,7 @@ void setup()
 {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   Serial.begin(115200);
-  //Serial.println("Serial begin");
+  Serial.println("Serial begin");
   delay(1000);
   Serial2.begin(115200);
   //Serial.println("Serial2 IMU begin");
@@ -69,13 +75,13 @@ void setup()
   //9600 NMEA is the default baud rate for Adafruit MTK GPS's- some use 4800
   GPS.begin(9600);
 
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  //
   GPS.sendCommand(PMTK_DISABLE_NAVIGATION_THRESHOLD);
-
-  //Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);    //5Hz update rate
-  GPS.sendCommand(PMTK_API_SET_FIX_CTL_5HZ);    //5Hz is the fastest it can go.
+  //GPS.sendCommand(PMTK_DISABLE_NAVIGATION_THRESHOLD1);
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  //GPS.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);    //5Hz update rate
+  //GPS.sendCommand(PMTK_DISABLE_PERIODIC_MODE);
   
   setupButtonCommands();
 }//end
@@ -115,7 +121,8 @@ void loop()
     }
     if (count % 4 == 0) //Every 200 ms
     {
-       //Serial.print(gpsLatLon[0]); Serial.print(","); Serial.println(gpsLatLon[1]);
+       
+       Serial.print(gpsLatLon[0]); Serial.print(","); Serial.println(gpsLatLon[1]);
        RoveComm.write(RC_NAVBOARD_GPSLATLON_DATAID, 2, gpsLatLon);
     }
     //Serial.println("");
@@ -159,8 +166,10 @@ void readIMU()
   imuHeading = tempHeading;
   finalImuData[1] = tempHeading;
   finalImuData[1] += 180;
+  finalImuData[1] -= DECLINATION;
   finalImuData[1] = finalImuData[1]%360;
   finalImuData[1] = map(finalImuData[1], 0, 359, 359, 0); //flip the data to be clockwise instead of counter clockwise
+  
   //Serial.println();
   Serial2.flush();
   }
@@ -220,29 +229,28 @@ void readGPS()
 
   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
-
     if (!GPS.parse(GPS.lastNMEA() ) )// this also sets the newNMEAreceived() flag to false
     {
       return;  // we can fail to parse a sentence in which case we should just wait for another
     }//end if
-    //Serial.println(GPS.lastNMEA());
   }//end if
   if(!GPS.fix)
     {
       GPS.fixquality = 0;
     }//end if
-    
+    gpsLatLon[0] = GPS.longitude_fixed;
+    gpsLatLon[1] = GPS.latitude_fixed;
     //if (GPS.fix)
     //{
       //TODO: VERIFY ADAFRUIT_GPS PULL #13
-      if (!(GPS.longitude_fixed < 900000000) && !(GPS.longitude_fixed > 930000000)) //require longitude to be in Missouri-ish
+      /*if (!(GPS.longitude_fixed < 900000000) && !(GPS.longitude_fixed > 930000000)) //require longitude to be in Missouri-ish
       {
         gpsLatLon[0] = GPS.longitude_fixed;
       }
       if (!(GPS.latitude_fixed < 360000000) && !(GPS.latitude_fixed > 390000000)) //require latitude to be in Missouri-ish
       {
         gpsLatLon[1] = GPS.latitude_fixed;
-      }
+      }*/
       //gpsLatLon[0] = GPS.longitude_fixed;
       //gpsLatLon[1] = GPS.latitude_fixed;
       //Serial.println();
