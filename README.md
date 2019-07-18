@@ -1,2 +1,2 @@
-# Sketches for Razor 9DOF IMU
-These need to be flashed through Arduino, not Energia
+# Valkyrie NavBoard
+The 2019 NavBoard code
