@@ -1,9 +1,0 @@
-TODO: Write instructions for calibration.
-
-Calibration Process for Magnetometer (magneto-meter): Attempt to paint the interior surface of a sphere of infinite radius centered at your point of existence while pretending the IMU is an infinitely long marker of infinitesimal size. Just pretend, it's more fun that way.
-
-Calibration process for Accelerometer: Point the accelerometer towards the 6 cardinal axes, take readings for the one in line with gravity. Apply a shift to any axes that aren't centered about 0. Divide by the sensitivity of the Accelerometer and ensure the values are 1 at the ends. If the values are greater than the sensitivity we might have issues, still need to determine and re-write if needed.
-
-Calibration process for Gyro: Just put it on the table. Don't touch it even though you probably want to.
-
-Data processing to determine calibration numbers: excel things after my account is setup.
