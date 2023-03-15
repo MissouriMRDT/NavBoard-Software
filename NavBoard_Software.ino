@@ -60,6 +60,18 @@ void getCompassData()
 
 void getBHIData()
 {
+    /*
+    Start-up process from data sheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bhi160b-ds000.pdf
+    1. Power on or reset device
+    2. Wait for Interrupt
+    3. Upload the Firmware (RAM patch)
+    4. Switch into main execution mode
+    5. Wait for Interrupt
+    6. Configure the sensors and meta events
+    7. Configure the FIFO buffers
+    7. Configure the host interrupt setting
+    */
+
 
 }
 
@@ -67,5 +79,6 @@ void getBHIData()
 
 void getICMData()
 {
+    // ICM-20608-G Documentation: https://invensense.tdk.com/wp-content/uploads/2015/03/DS-000081-v1.01.pdf?ref_disty=digikey
 
 }
