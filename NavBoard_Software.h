@@ -41,11 +41,10 @@ EthernetServer TCPServer(RC_ROVECOMM_NAVBOARD_PORT);
 // GPS
 #define GPS_SERIAL_BAUD     9600
 #define GPS_SERIAL          Serial7
-float roverLatLon[2];
+double roverLatLon[2];
+bool newGPSData = false;
 
 ////// Function declarations //////
-void gpsDump();
-void getGPSData();
 void getCompassData();
 void getBHIData();
 void getICMData();

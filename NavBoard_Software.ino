@@ -32,7 +32,7 @@ void setup()
 
 void loop()
 {
-    bool newdata = false;
+    newGPSData = false;
     unsigned long start = millis();
 
     // Every 5 seconds we print an update
@@ -44,13 +44,13 @@ void loop()
             //Serial.print(c);  // uncomment to see raw GPS data
             if (gps.encode(c)) 
             {
-                newdata = true;
+                newGPSData = true;
                 // break;  // uncomment to print new data immediately!
             }
         }
     }
     
-    if (newdata)
+    if (newGPSData)
     {
         Serial.println("Acquired Data");
         Serial.println("-------------");
@@ -60,7 +60,7 @@ void loop()
     }
 
 
-    getGPSData();
+    
     //getCompassData();
     //getBHIData();
     //getICMData();
@@ -71,7 +71,9 @@ void loop()
 
 void telemetry()
 {
-    RoveComm.write(RC_NAVBOARD_GPSLATLON_DATA_ID, RC_NAVBOARD_GPSLATLON_DATA_COUNT, roverLatLon);
+    //double data[2] = {0,0};
+    uint8_t x =0;
+    /*if (newGPSData) */RoveComm.write(5103, 1, &x);
 }
 
 
@@ -88,6 +90,8 @@ void gpsDump()
     Serial.print("Lat/Long(10^-5 deg): "); Serial.print(lat); Serial.print(", "); Serial.print(lon); 
     Serial.print(" Fix age: "); Serial.print(age); Serial.println("ms.");
     
+    roverLatLon[0]=static_cast<double>(lat);
+    roverLatLon[1]=static_cast<double>(lon);
     // On Arduino, GPS characters may be lost during lengthy Serial.print()
     // On Teensy, Serial prints to USB, which has large output buffering and
     //   runs very fast, so it's not necessary to worry about missing 4800
@@ -117,20 +121,9 @@ void gpsDump()
 
 
 
-void getGPSData()
-{
-    static float lat,lon;
-    static unsigned long age;
-    gps.f_get_position(&lat, &lon, &age);
-    roverLatLon[0] = lat;
-    roverLatLon[1] = lon;
-}
-
-
-
 void getCompassData()
 {
-
+    // code go brrr
 }
 
 
